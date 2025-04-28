@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+      - "3001:3001"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - umbrel_main_network
+
+networks:
+  umbrel_main_network:
+    external: true
