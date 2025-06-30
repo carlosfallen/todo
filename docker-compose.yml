@@ -5,14 +5,14 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "5173:5173"
       - "3001:3001"
-    volumes:
-      - .:/app
-      - /app/node_modules
     networks:
       - umbrel_main_network
+    volumes:
+      - ./data:/app/data
+    tty: true
 
 networks:
   umbrel_main_network:
     external: true
+

@@ -1,15 +1,21 @@
-FROM node:18-bullseye
-
+FROM node:18 AS builder
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm install
-
 COPY . .
+RUN npm run build
 
-# Expor as portas do frontend e backend
-EXPOSE 5173 3001
+FROM node:18-slim
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/package*.json ./
+RUN npm install --only=production
 
-# Rodar o script de desenvolvimento
-CMD ["npm", "run", "dev"]
+# Expor a porta que será usada
+EXPOSE 3001
 
+# Usar variável de ambiente PORT (padrão 3001)
+ENV PORT=3001
+
+CMD ["node", "server/index.js"]

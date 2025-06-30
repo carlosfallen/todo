@@ -73,15 +73,17 @@ const TaskSteps: React.FC<TaskStepsProps> = ({ steps, onChange }) => {
         <div 
           key={step.id}
           className={`flex items-start gap-2 p-2 rounded ${
-            editingStepId === step.id ? 'bg-neutral-100' : 'hover:bg-neutral-50'
+            editingStepId === step.id 
+              ? 'bg-neutral-100 dark:bg-neutral-800' 
+              : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
           }`}
         >
           <button
             onClick={() => handleUpdateStep(step.id, { completed: !step.completed })}
             className={`flex-shrink-0 w-4 h-4 mt-1 rounded border ${
               step.completed
-                ? 'bg-primary-500 border-primary-500' 
-                : 'border-neutral-400'
+                ? 'bg-primary-500 border-primary-500 dark:bg-primary-600 dark:border-primary-600' 
+                : 'border-neutral-400 dark:border-neutral-500'
             }`}
           />
           
@@ -97,20 +99,24 @@ const TaskSteps: React.FC<TaskStepsProps> = ({ steps, onChange }) => {
                     setEditingStepId(null);
                   }
                 }}
-                className="w-full bg-transparent focus:outline-none"
+                className="w-full bg-transparent focus:outline-none text-neutral-900 dark:text-neutral-100"
                 autoFocus
               />
             ) : (
               <div
                 onClick={() => setEditingStepId(step.id)}
-                className={`text-sm ${step.completed ? 'line-through text-neutral-500' : ''}`}
+                className={`text-sm cursor-pointer ${
+                  step.completed 
+                    ? 'line-through text-neutral-500 dark:text-neutral-400' 
+                    : 'text-neutral-900 dark:text-neutral-100'
+                }`}
               >
                 {step.title}
               </div>
             )}
             
             {(step.dueDate || step.assignee) && (
-              <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+              <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                 {step.dueDate && (
                   <span className="flex items-center gap-1">
                     <Calendar size={12} />
@@ -130,7 +136,7 @@ const TaskSteps: React.FC<TaskStepsProps> = ({ steps, onChange }) => {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowDatePicker(step.id)}
-              className="p-1 text-neutral-400 hover:text-neutral-600 rounded-full hover:bg-neutral-100"
+              className="p-1 text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700"
             >
               <Calendar size={14} />
             </button>
@@ -145,7 +151,7 @@ const TaskSteps: React.FC<TaskStepsProps> = ({ steps, onChange }) => {
             
             <button
               onClick={() => handleDeleteStep(step.id)}
-              className="p-1 text-neutral-400 hover:text-important-500 rounded-full hover:bg-neutral-100"
+              className="p-1 text-neutral-400 hover:text-important-500 dark:text-neutral-500 dark:hover:text-important-400 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700"
             >
               <X size={14} />
             </button>
@@ -165,15 +171,15 @@ const TaskSteps: React.FC<TaskStepsProps> = ({ steps, onChange }) => {
               handleAddStep();
             }
           }}
-          className="flex-1 text-sm bg-transparent focus:outline-none placeholder-neutral-400"
+          className="flex-1 text-sm bg-transparent focus:outline-none placeholder-neutral-400 dark:placeholder-neutral-500 text-neutral-900 dark:text-neutral-100"
         />
         <button
           onClick={handleAddStep}
           disabled={!newStepTitle.trim()}
           className={`p-1 rounded-full ${
             newStepTitle.trim()
-              ? 'text-primary-600 hover:bg-primary-50'
-              : 'text-neutral-300'
+              ? 'text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20'
+              : 'text-neutral-300 dark:text-neutral-600'
           }`}
         >
           <Plus size={14} />

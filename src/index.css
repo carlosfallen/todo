@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Configurações globais para dark mode */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Customização de scrollbar para dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Estilos para inputs em dark mode */
+.dark input[type="checkbox"] {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark input[type="checkbox"]:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}

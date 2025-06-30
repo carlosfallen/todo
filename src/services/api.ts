@@ -1,6 +1,6 @@
 import { Task, TaskList } from '../types';
 // Base URL for API calls
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = `http://${window.location.hostname}:5175/api`;
 
 // Helper function for handling API errors
 const handleResponse = async (response: Response) => {

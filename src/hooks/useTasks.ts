@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Task, TaskFilter } from '../types';
 import { taskStorage } from '../services/localStorage';
-import { taskAPI } from '../services/api';
-
+import { taskAPI } from '../services/taskAPI';
+ 
 export default function useTasks(listId?: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,5 +220,6 @@ export default function useTasks(listId?: string) {
     toggleTaskCompletion,
     toggleTaskImportance,
     refreshTasks: fetchTasks,
+    fetchTasks 
   };
 }

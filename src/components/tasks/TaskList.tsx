@@ -84,7 +84,7 @@ const TaskList: React.FC = () => {
   });
   
   return (
-    <div className="p-4">
+    <div className="p-4 bg-neutral-00 dark:bg-neutral-800 min-h-full">
       {isAddingTask && (
         <div className="mb-4">
           <TaskForm onClose={() => setIsAddingTask(false)} />
@@ -105,8 +105,10 @@ const TaskList: React.FC = () => {
         <div className="space-y-6">
           {sortedGroups.map(([group, tasks]) => (
             <div key={group}>
-              <h2 className="text-sm font-medium text-neutral-500 mb-2">{group}</h2>
-              <div>
+              <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2 uppercase tracking-wide">
+                {group}
+              </h2>
+              <div className="space-y-1">
                 {tasks.map(task => (
                   <TaskItem key={task.id} task={task} />
                 ))}

@@ -54,6 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteTask,
     toggleTaskCompletion,
     toggleTaskImportance,
+    fetchTasks, // Make sure this is exported from your useTasks hook
   } = useTasks();
   
   const {
@@ -63,7 +64,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveListId,
     createList,
     updateList,
-    deleteList,
+    deleteList: deleteListFromHook,
   } = useTaskLists();
   
   // UI state
@@ -73,6 +74,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Helpers
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
   const activeList = lists.find(list => list.id === activeListId);
+  
+  // Enhanced deleteList function that also refreshes tasks
+  const deleteList = async (listId: string) => {
+    try {
+      const success = await deleteListFromHook(listId);
+      
+      if (success) {
+        // Refresh tasks after list deletion
+        fetchTasks();
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error deleting list:', error);
+      throw error;
+    }
+  };
   
   const value = {
     // Task operations

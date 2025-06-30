@@ -4,30 +4,37 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@libsql/client';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Load environment variables
 dotenv.config();
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-// Middleware
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, '../dist')));
+
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Create database client
+// Ajuste para o caminho do banco dentro do container, na pasta data
+const dbPath = path.join(__dirname, '../data/local.db');
+
 let db;
 
 try {
   db = createClient({
-    url: 'file:./local.db',
+    url: `file:${dbPath}`, // Usa o caminho absoluto
   });
-  
+
   console.log('Connected to local LibSQL database');
-  
-  // Initialize database tables
+
+  // Inicializa as tabelas
   await initDatabase();
 } catch (error) {
   console.error('Failed to connect to database:', error);
@@ -90,7 +97,7 @@ async function initDatabase() {
       const now = new Date().toISOString();
       await db.execute({
         sql: 'INSERT INTO lists (id, name, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-        args: ['default', 'My Tasks', '#3B82F6', now, now]
+        args: ['default', 'Tarefas', '#3B82F6', now, now]
       });
       console.log('Created default list');
     }
@@ -770,7 +777,10 @@ app.delete('/api/lists/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Acessível na rede local via: http://10.0.0.146:${PORT}`);
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+app.listen(5175, '0.0.0.0', () => {
+  console.log(`Server running on port 3001`);
 });

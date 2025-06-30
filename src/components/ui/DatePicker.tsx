@@ -89,7 +89,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onSelect, onClose
   return (
     <div 
       ref={datePickerRef}
-      className="absolute z-30 mt-1 left-0 right-0 md:right-auto bg-white rounded-md shadow-lg border border-neutral-200 w-full max-w-xs md:w-64"
+      className="absolute z-30 mt-1 left-0 right-0 md:right-auto bg-white dark:bg-gray-900 rounded-md shadow-lg border border-neutral-200 w-full max-w-xs md:w-64"
     >
       <div className="p-2">
         <div className="mb-2 space-y-1">

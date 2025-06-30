@@ -6,6 +6,31 @@ import { Task, TaskList } from '../types';
 const TASKS_KEY = 'taskmaster_tasks';
 const LISTS_KEY = 'taskmaster_lists';
 
+// UUID generator fallback for older browsers
+const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback UUID generator
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+// Helper function to remove undefined values from object
+const removeUndefinedFields = (obj: any): any => {
+  const cleaned: any = {};
+  Object.keys(obj).forEach(key => {
+    if (obj[key] !== undefined) {
+      cleaned[key] = obj[key];
+    }
+  });
+  return cleaned;
+};
+
 // Task storage functions
 export const taskStorage = {
   getAllTasks: (): Task[] => {
@@ -24,9 +49,13 @@ export const taskStorage = {
 
   createTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Task => {
     const tasks = taskStorage.getAllTasks();
+    
+    // Remove undefined fields before saving
+    const cleanedTask = removeUndefinedFields(task);
+    
     const newTask: Task = {
-      ...task,
-      id: crypto.randomUUID(),
+      ...cleanedTask,
+      id: generateUUID(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -43,9 +72,12 @@ export const taskStorage = {
       throw new Error('Task not found');
     }
     
+    // Remove undefined fields from updates
+    const cleanedUpdates = removeUndefinedFields(updatedTask);
+    
     const updated: Task = {
       ...tasks[taskIndex],
-      ...updatedTask,
+      ...cleanedUpdates,
       updatedAt: new Date().toISOString()
     };
     
@@ -99,9 +131,13 @@ export const listStorage = {
 
   createList: (list: Omit<TaskList, 'id' | 'createdAt' | 'updatedAt'>): TaskList => {
     const lists = listStorage.getAllLists();
+    
+    // Remove undefined fields before saving
+    const cleanedList = removeUndefinedFields(list);
+    
     const newList: TaskList = {
-      ...list,
-      id: crypto.randomUUID(),
+      ...cleanedList,
+      id: generateUUID(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -118,9 +154,12 @@ export const listStorage = {
       throw new Error('List not found');
     }
     
+    // Remove undefined fields from updates
+    const cleanedUpdates = removeUndefinedFields(updatedList);
+    
     const updated: TaskList = {
       ...lists[listIndex],
-      ...updatedList,
+      ...cleanedUpdates,
       updatedAt: new Date().toISOString()
     };
     

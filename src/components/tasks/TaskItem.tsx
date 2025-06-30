@@ -76,9 +76,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     
-    if (isPast(dueDate) && !isToday(dueDate)) return 'text-important-600';
-    if (isToday(dueDate)) return 'text-primary-600';
-    if (isFuture(dueDate)) return 'text-accent-600';
+    if (isPast(dueDate) && !isToday(dueDate)) return 'text-important-600 dark:text-important-400';
+    if (isToday(dueDate)) return 'text-primary-600 dark:text-primary-400';
+    if (isFuture(dueDate)) return 'text-accent-600 dark:text-accent-400';
     
     return '';
   };
@@ -95,17 +95,17 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
     <div 
       className={`p-3 rounded-lg mb-2 transition-all ${
         task.completed 
-          ? 'bg-neutral-100 opacity-70' 
-          : 'bg-white hover:shadow-md hover:-translate-y-0.5'
-      } shadow border border-neutral-200`}
+          ? 'bg-neutral-100 dark:bg-neutral-800 opacity-70' 
+          : 'bg-white dark:bg-neutral-900 hover:shadow-md hover:-translate-y-0.5'
+      } shadow border border-neutral-200 dark:border-neutral-700`}
     >
       <div className="flex items-start gap-3">
         <button
           onClick={handleToggleComplete}
           className={`flex-shrink-0 w-5 h-5 rounded-full border ${
             task.completed
-              ? 'bg-primary-500 border-primary-500' 
-              : 'border-neutral-400'
+              ? 'bg-primary-500 border-primary-500 dark:bg-primary-400 dark:border-primary-400' 
+              : 'border-neutral-400 dark:border-neutral-500'
           } flex items-center justify-center mt-0.5`}
           aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
         >
@@ -117,21 +117,25 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
             <div>
               <h3 
                 className={`text-sm font-medium ${
-                  task.completed ? 'line-through text-neutral-500' : 'text-neutral-800'
+                  task.completed 
+                    ? 'line-through text-neutral-500 dark:text-neutral-400' 
+                    : 'text-neutral-800 dark:text-neutral-200'
                 }`}
               >
                 {task.title}
               </h3>
               
               {hasSteps && (
-                <div className="mt-1 text-xs text-neutral-500">
+                <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                   {completedSteps} of {totalSteps} steps completed
                 </div>
               )}
               
               {task.notes && (
                 <p className={`text-xs mt-1 ${
-                  task.completed ? 'text-neutral-400' : 'text-neutral-600'
+                  task.completed 
+                    ? 'text-neutral-400 dark:text-neutral-500' 
+                    : 'text-neutral-600 dark:text-neutral-400'
                 } line-clamp-2`}>
                   {task.notes}
                 </p>
@@ -141,7 +145,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
             <div className="flex items-center gap-1 flex-shrink-0">
               {task.dueDate && (
                 <span 
-                  className={`text-xs flex items-center px-2 py-0.5 rounded-full bg-neutral-100 ${getDueDateClass(task.dueDate)}`}
+                  className={`text-xs flex items-center px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 ${getDueDateClass(task.dueDate)}`}
                 >
                   <Calendar size={12} className="mr-1" />
                   {formatDueDate(task.dueDate)}
@@ -152,8 +156,8 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 onClick={handleToggleImportant}
                 className={`p-1 rounded-full ${
                   task.important 
-                    ? 'text-accent-500' 
-                    : 'text-neutral-400 hover:text-neutral-500'
+                    ? 'text-accent-500 dark:text-accent-400' 
+                    : 'text-neutral-400 hover:text-neutral-500 dark:text-neutral-500 dark:hover:text-neutral-400'
                 }`}
                 aria-label={task.important ? "Remove importance" : "Mark as important"}
               >
@@ -163,7 +167,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowOptions(!showOptions)}
-                  className="p-1 rounded-full text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
+                  className="p-1 rounded-full text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:text-neutral-500 dark:hover:text-neutral-300 dark:hover:bg-neutral-800"
                   aria-label="More options"
                 >
                   <MoreVertical size={16} />
@@ -172,19 +176,19 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 {showOptions && (
                   <div 
                     ref={optionsRef}
-                    className="absolute right-0 mt-1 bg-white rounded-md shadow-lg border border-neutral-200 z-10 min-w-48"
+                    className="absolute right-0 mt-1 bg-white dark:bg-neutral-900 rounded-md shadow-lg border border-neutral-200 dark:border-neutral-700 z-10 min-w-48"
                   >
                     <div className="py-1">
                       <button
                         onClick={handleEditTask}
-                        className="flex w-full items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                        className="flex w-full items-center px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                       >
                         <Edit size={16} className="mr-2" />
                         Edit
                       </button>
                       <button
                         onClick={handleDeleteTask}
-                        className="flex w-full items-center px-4 py-2 text-sm text-important-600 hover:bg-neutral-100"
+                        className="flex w-full items-center px-4 py-2 text-sm text-important-600 hover:bg-neutral-100 dark:text-important-400 dark:hover:bg-neutral-800"
                       >
                         <Trash2 size={16} className="mr-2" />
                         Delete
@@ -200,7 +204,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
             <div className="mt-2">
               <button
                 onClick={() => setShowSteps(!showSteps)}
-                className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700"
+                className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
               >
                 {showSteps ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 <span>{showSteps ? 'Hide steps' : 'Show steps'}</span>
@@ -217,20 +221,24 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                         onClick={() => handleToggleStep(step.id)}
                         className={`flex-shrink-0 w-4 h-4 mt-0.5 rounded border ${
                           step.completed
-                            ? 'bg-primary-500 border-primary-500' 
-                            : 'border-neutral-400'
+                            ? 'bg-primary-500 border-primary-500 dark:bg-primary-400 dark:border-primary-400' 
+                            : 'border-neutral-400 dark:border-neutral-500'
                         }`}
                       >
                         {step.completed && <Check size={10} className="text-white" />}
                       </button>
                       
                       <div className="flex-1">
-                        <div className={`text-sm ${step.completed ? 'line-through text-neutral-500' : ''}`}>
+                        <div className={`text-sm ${
+                          step.completed 
+                            ? 'line-through text-neutral-500 dark:text-neutral-400' 
+                            : 'text-neutral-800 dark:text-neutral-200'
+                        }`}>
                           {step.title}
                         </div>
                         
                         {(step.dueDate || step.assignee) && (
-                          <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500">
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
                             {step.dueDate && (
                               <span className="flex items-center gap-1">
                                 <Calendar size={10} />

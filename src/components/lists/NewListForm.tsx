@@ -60,7 +60,7 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="mb-3 p-2 bg-white rounded-lg border border-neutral-300 shadow-sm"
+      className="mb-3 p-2 bg-white dark:bg-gray-800 rounded-lg border border-neutral-300 dark:border-neutral-600 shadow-sm"
     >
       <div className="mb-3">
         <input
@@ -69,7 +69,7 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
           placeholder="List name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-300"
+          className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-300 bg-white dark:bg-gray-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500"
         />
       </div>
       
@@ -80,7 +80,7 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
               key={colorOption}
               type="button"
               onClick={() => setColor(colorOption)}
-              className={`w-6 h-6 rounded-full border-2 ${color === colorOption ? 'border-neutral-800' : 'border-transparent'}`}
+              className={`w-6 h-6 rounded-full border-2 ${color === colorOption ? 'border-neutral-800 dark:border-neutral-200' : 'border-transparent'}`}
               style={{ backgroundColor: colorOption }}
               aria-label={`Select color ${colorOption}`}
             />
@@ -92,7 +92,7 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded"
+          className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
         >
           <X size={16} />
         </button>
@@ -103,7 +103,7 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
           className={`px-3 py-1 rounded text-sm ${
             name.trim() 
               ? 'bg-primary-600 text-white hover:bg-primary-700' 
-              : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+              : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 dark:text-neutral-500 cursor-not-allowed'
           }`}
         >
           Create

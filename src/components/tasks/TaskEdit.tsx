@@ -101,7 +101,7 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
     <form
       ref={formRef}
       onSubmit={(e) => { e.preventDefault(); handleSave(); }}
-      className="border border-neutral-300 rounded-lg bg-white shadow-md overflow-hidden focus-within:ring-2 focus-within:ring-primary-300 focus-within:border-primary-300 mb-2"
+      className="border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-gray-800 shadow-md overflow-hidden focus-within:ring-2 focus-within:ring-primary-300 focus-within:border-primary-300 mb-2"
     >
       <div className="p-3">
         <input
@@ -110,25 +110,25 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
           placeholder="Task name"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full text-neutral-800 font-medium placeholder-neutral-400 focus:outline-none"
+          className="w-full text-neutral-800 dark:text-neutral-100 font-medium placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none bg-transparent"
         />
         
         <textarea
           placeholder="Add notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full mt-2 text-sm text-neutral-600 placeholder-neutral-400 focus:outline-none resize-none"
+          className="w-full mt-2 text-sm text-neutral-600 dark:text-neutral-300 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none resize-none bg-transparent"
           rows={3}
         />
         
         <TaskSteps steps={steps} onChange={setSteps} />
         
-        <div className="mt-3 flex items-center justify-between text-xs text-neutral-500">
+        <div className="mt-3 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowListDropdown(!showListDropdown)}
-              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-neutral-100"
+              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700"
             >
               <div 
                 className="w-2 h-2 rounded-full"
@@ -140,7 +140,7 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
             {showListDropdown && (
               <div 
                 ref={listDropdownRef}
-                className="absolute left-0 mt-1 bg-white rounded-md shadow-lg border border-neutral-200 z-10 min-w-48"
+                className="absolute left-0 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-neutral-200 dark:border-neutral-600 z-10 min-w-48"
               >
                 <div className="py-1 max-h-48 overflow-y-auto">
                   {lists.map(list => (
@@ -153,8 +153,8 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
                       }}
                       className={`flex items-center px-4 py-2 text-sm w-full text-left ${
                         list.id === listId 
-                          ? 'bg-primary-50 text-primary-600' 
-                          : 'hover:bg-neutral-100 text-neutral-700'
+                          ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-300' 
+                          : 'hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
                       }`}
                     >
                       <div 
@@ -175,13 +175,17 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
         </div>
       </div>
       
-      <div className="border-t border-neutral-200 p-2 flex items-center justify-between bg-neutral-50">
+      <div className="border-t border-neutral-200 dark:border-neutral-600 p-2 flex items-center justify-between bg-neutral-50 dark:bg-gray-700">
         <div className="flex items-center gap-2">
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className={`p-1.5 rounded-full ${dueDate ? 'text-primary-600 bg-primary-50' : 'text-neutral-500 hover:bg-neutral-100'}`}
+              className={`p-1.5 rounded-full ${
+                dueDate 
+                  ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-300' 
+                  : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-600'
+              }`}
             >
               <CalendarIcon size={18} />
             </button>
@@ -198,7 +202,11 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
           <button
             type="button"
             onClick={() => setImportant(!important)}
-            className={`p-1.5 rounded-full ${important ? 'text-accent-500' : 'text-neutral-500 hover:bg-neutral-100'}`}
+            className={`p-1.5 rounded-full ${
+              important 
+                ? 'text-accent-500' 
+                : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-600'
+            }`}
           >
             <Star size={18} fill={important ? 'currentColor' : 'none'} />
           </button>
@@ -206,13 +214,13 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
           <button
             type="button"
             onClick={handleDelete}
-            className="p-1.5 rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-important-500"
+            className="p-1.5 rounded-full text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-600 hover:text-important-500"
           >
             <Trash2 size={18} />
           </button>
           
           {dueDate && (
-            <div className="px-2 py-1 rounded-full bg-primary-50 text-primary-600 text-xs flex items-center gap-1">
+            <div className="px-2 py-1 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-300 text-xs flex items-center gap-1">
               <span>
                 {new Date(dueDate).toLocaleDateString('en-US', { 
                   month: 'short', 
@@ -222,7 +230,7 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
               <button
                 type="button"
                 onClick={handleRemoveDueDate}
-                className="hover:bg-primary-100 rounded-full"
+                className="hover:bg-primary-100 dark:hover:bg-primary-800/30 rounded-full"
               >
                 <X size={14} />
               </button>
@@ -234,7 +242,7 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1 text-sm text-neutral-600 hover:bg-neutral-200 rounded"
+            className="px-3 py-1 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded"
           >
             Cancel
           </button>
@@ -244,7 +252,7 @@ const TaskEdit: React.FC<TaskEditProps> = ({ task, onClose }) => {
             className={`px-3 py-1 rounded text-sm ${
               title.trim() 
                 ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-400 dark:text-neutral-500 cursor-not-allowed'
             }`}
           >
             Save
