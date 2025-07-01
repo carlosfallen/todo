@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, X, Calendar, Star, ArrowDownUp, Filter, Menu, Upload } from 'lucide-react';
+import { Search, Plus, X, Calendar, Star, ArrowUpDown, Filter, Menu, Upload } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { TaskSortOption } from '../../types';
 import TaskImporter from '../tasks/TaskImporter';
@@ -60,61 +60,57 @@ const Header: React.FC = () => {
   };
   
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm p-3 md:p-4 flex flex-col gap-3 transition-colors">
+    <header className="bg-surface-50 dark:bg-surface-900 shadow-elevation-1 p-4 md:p-6 flex flex-col gap-4 transition-colors">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {/* Mobile sidebar toggle integrated in header */}
+        <div className="flex items-center gap-3">
           <button 
-            className="md:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-gray-800 transition-colors"
+            className="md:hidden p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple"
             onClick={toggleSidebar}
-            aria-label="Toggle sidebar"
+            aria-label="Abrir menu"
           >
-            <Menu size={20} className="text-gray-700 dark:text-gray-300" />
+            <Menu size={20} className="text-surface-700 dark:text-surface-300" />
           </button>
           
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-neutral-800 dark:text-gray-100 truncate transition-colors">
-              {activeList ? activeList.name : 'All Tasks'}
+            <h1 className="text-2xl font-medium text-surface-900 dark:text-surface-50 truncate">
+              {activeList ? activeList.name : 'Todas as Tarefas'}
             </h1>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Mobile search button */}
           <button
-            className="md:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-gray-800 transition-colors"
+            className="md:hidden p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple"
             onClick={() => setShowSearchBar(!showSearchBar)}
-            aria-label="Toggle search"
+            aria-label="Buscar"
           >
-            <Search size={20} className="text-gray-700 dark:text-gray-300" />
+            <Search size={20} className="text-surface-700 dark:text-surface-300" />
           </button>
           
-          {/* Import button */}
           <button
-            className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple"
             onClick={() => setShowImporter(true)}
-            aria-label="Import tasks"
+            aria-label="Importar tarefas"
           >
-            <Upload size={20} className="text-gray-700 dark:text-gray-300" />
+            <Upload size={20} className="text-surface-700 dark:text-surface-300" />
           </button>
 
-          {/* Desktop search bar - always visible */}
           <div className="relative hidden md:block">
             <Search 
               size={18} 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-gray-500" 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" 
             />
             <input
               type="text"
-              placeholder="Search tasks..."
+              placeholder="Buscar tarefas..."
               value={filter.search}
               onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-              className="pl-10 pr-8 py-2 w-60 rounded-full border border-neutral-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-300 dark:focus:ring-primary-400 bg-neutral-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+              className="input-field pl-10 pr-10 py-3 w-64 rounded-3xl"
             />
             {filter.search && (
               <button
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300 transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors ripple"
               >
                 <X size={16} />
               </button>
@@ -123,123 +119,125 @@ const Header: React.FC = () => {
 
           <div className="relative">
             <button
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-2 rounded-xl transition-colors ripple ${
                 showFilterMenu || Object.values(filter).some(Boolean) 
-                  ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400' 
-                  : 'hover:bg-neutral-100 dark:hover:bg-gray-800'
+                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
+                  : 'hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
               }`}
               onClick={() => setShowFilterMenu(!showFilterMenu)}
-              aria-label="Filter tasks"
+              aria-label="Filtrar tarefas"
             >
-              <Filter size={20} className={showFilterMenu || Object.values(filter).some(Boolean) ? '' : 'text-gray-700 dark:text-gray-300'} />
+              <Filter size={20} />
             </button>
             
             {showFilterMenu && (
               <div 
                 ref={filterMenuRef}
-                className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-neutral-200 dark:border-gray-700 z-20 transition-colors"
+                className="absolute right-0 mt-2 w-72 card-elevated z-20 animate-slide-down"
               >
-                <div className="p-3">
-                  <h3 className="text-sm font-medium text-neutral-700 dark:text-gray-300 mb-2">Sort by</h3>
-                  <div className="space-y-2">
+                <div className="p-4">
+                  <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-3">
+                    Ordenar por
+                  </h3>
+                  <div className="space-y-1">
                     <button
-                      className={`flex items-center justify-between w-full p-2 rounded-md transition-colors ${
+                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
                         filter.sortBy === 'importance' 
                           ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-neutral-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
                       }`}
                       onClick={() => handleSortChange('importance')}
                     >
-                      <span className="flex items-center">
-                        <Star size={16} className="mr-2" />
-                        Importance
+                      <span className="flex items-center gap-3">
+                        <Star size={16} />
+                        Importância
                       </span>
-                      {filter.sortBy === 'importance' && <ArrowDownUp size={16} />}
+                      {filter.sortBy === 'importance' && <ArrowUpDown size={16} />}
                     </button>
                     
                     <button
-                      className={`flex items-center justify-between w-full p-2 rounded-md transition-colors ${
+                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
                         filter.sortBy === 'dueDate' 
                           ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-neutral-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
                       }`}
                       onClick={() => handleSortChange('dueDate')}
                     >
-                      <span className="flex items-center">
-                        <Calendar size={16} className="mr-2" />
-                        Due date
+                      <span className="flex items-center gap-3">
+                        <Calendar size={16} />
+                        Data de vencimento
                       </span>
-                      {filter.sortBy === 'dueDate' && <ArrowDownUp size={16} />}
+                      {filter.sortBy === 'dueDate' && <ArrowUpDown size={16} />}
                     </button>
                     
                     <button
-                      className={`flex items-center justify-between w-full p-2 rounded-md transition-colors ${
+                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
                         filter.sortBy === 'alphabetical' 
                           ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-neutral-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
                       }`}
                       onClick={() => handleSortChange('alphabetical')}
                     >
-                      <span className="flex items-center">
-                        <span className="mr-2 text-lg">A-Z</span>
-                        Alphabetical
+                      <span className="flex items-center gap-3">
+                        <span className="text-lg font-medium">A-Z</span>
+                        Alfabética
                       </span>
-                      {filter.sortBy === 'alphabetical' && <ArrowDownUp size={16} />}
+                      {filter.sortBy === 'alphabetical' && <ArrowUpDown size={16} />}
                     </button>
                     
                     <button
-                      className={`flex items-center justify-between w-full p-2 rounded-md transition-colors ${
+                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
                         filter.sortBy === 'createdAt' 
                           ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-neutral-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
                       }`}
                       onClick={() => handleSortChange('createdAt')}
                     >
-                      <span className="flex items-center">
-                        <span className="mr-2 text-lg">+</span>
-                        Creation date
+                      <span className="flex items-center gap-3">
+                        <span className="text-lg font-medium">+</span>
+                        Data de criação
                       </span>
-                      {filter.sortBy === 'createdAt' && <ArrowDownUp size={16} />}
+                      {filter.sortBy === 'createdAt' && <ArrowUpDown size={16} />}
                     </button>
                   </div>
                 </div>
                 
-                <div className="border-t border-neutral-200 dark:border-gray-700 p-3">
-                  <h3 className="text-sm font-medium text-neutral-700 dark:text-gray-300 mb-2">Filter</h3>
+                <div className="border-t border-outline-variant/20 p-4">
+                  <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-3">
+                    Filtros
+                  </h3>
                   <div className="space-y-2">
-                    <button
-                      className={`flex items-center w-full p-2 rounded-md transition-colors ${
+                    <label
+                      className={`flex items-center w-full p-3 rounded-xl cursor-pointer transition-colors ripple ${
                         filter.important 
                           ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-neutral-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
                       }`}
-                      onClick={handleImportantFilterToggle}
                     >
                       <input
                         type="checkbox"
                         checked={filter.important}
                         onChange={handleImportantFilterToggle}
-                        className="mr-2 h-4 w-4 text-primary-600 dark:text-primary-400 rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                        className="mr-3 h-4 w-4 text-primary-600 rounded border-outline focus:ring-primary-500"
                       />
-                      <span>Important tasks only</span>
-                    </button>
+                      <span>Apenas tarefas importantes</span>
+                    </label>
                     
-                    <button
-                      className={`flex items-center w-full p-2 rounded-md transition-colors ${
+                    <label
+                      className={`flex items-center w-full p-3 rounded-xl cursor-pointer transition-colors ripple ${
                         filter.completed 
                           ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-neutral-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
                       }`}
-                      onClick={handleCompletedFilterToggle}
                     >
                       <input
                         type="checkbox"
                         checked={filter.completed}
                         onChange={handleCompletedFilterToggle}
-                        className="mr-2 h-4 w-4 text-primary-600 dark:text-primary-400 rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                        className="mr-3 h-4 w-4 text-primary-600 rounded border-outline focus:ring-primary-500"
                       />
-                      <span>Completed tasks</span>
-                    </button>
+                      <span>Tarefas concluídas</span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -247,42 +245,41 @@ const Header: React.FC = () => {
           </div>
           
           <button
-            className="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto md:px-3 md:py-2 rounded-full bg-primary-600 dark:bg-primary-700 text-white hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors"
+            className="btn-fab w-12 h-12 md:w-auto md:h-auto md:px-6 md:py-3 md:rounded-3xl"
             onClick={() => setIsAddingTask(true)}
-            aria-label="Add task"
+            aria-label="Adicionar tarefa"
           >
             <Plus size={18} />
-            <span className="hidden md:ml-1 md:inline">Add Task</span>
+            <span className="hidden md:ml-2 md:inline">Nova Tarefa</span>
           </button>
         </div>
       </div>
       
-      {/* Mobile search bar - conditionally visible */}
       {showSearchBar && (
-        <div className="relative md:hidden">
+        <div className="relative md:hidden animate-slide-down">
           <Search 
             size={18} 
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-gray-500" 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" 
           />
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search tasks..."
+            placeholder="Buscar tarefas..."
             value={filter.search}
             onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-            className="pl-10 pr-8 py-2 w-full rounded-full border border-neutral-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-300 dark:focus:ring-primary-400 bg-neutral-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+            className="input-field pl-10 pr-10 py-3 w-full rounded-3xl"
           />
           {filter.search ? (
             <button
               onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors ripple"
             >
               <X size={16} />
             </button>
           ) : (
             <button
               onClick={() => setShowSearchBar(false)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-gray-500 hover:text-neutral-600 dark:hover:text-gray-300 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors ripple"
             >
               <X size={16} />
             </button>
@@ -290,7 +287,6 @@ const Header: React.FC = () => {
         </div>
       )}
 
-      {/* Task importer modal */}
       {showImporter && <TaskImporter onClose={() => setShowImporter(false)} />}
     </header>
   );

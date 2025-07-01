@@ -15,19 +15,19 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   onAction
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-8 md:py-12 px-4 text-center">
-      <div className="mb-4 p-4 rounded-full bg-neutral-100">
-        <ClipboardCheck size={32} className="text-neutral-400" />
+    <div className="flex flex-col items-center justify-center py-12 md:py-16 px-6 text-center animate-fade-in">
+      <div className="mb-6 p-6 rounded-3xl bg-surface-100 dark:bg-surface-800">
+        <ClipboardCheck size={48} className="text-surface-400 dark:text-surface-500" />
       </div>
-      <h2 className="text-lg font-medium text-neutral-800 mb-2">{title}</h2>
-      <p className="text-neutral-500 mb-6 max-w-md text-sm md:text-base">{description}</p>
+      <h2 className="text-xl font-medium text-surface-900 dark:text-surface-50 mb-3">{title}</h2>
+      <p className="text-surface-600 dark:text-surface-400 mb-8 max-w-md">{description}</p>
       
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="flex items-center gap-1 px-4 py-2 rounded-full bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          className="btn-filled flex items-center gap-2"
         >
-          <Plus size={16} />
+          <Plus size={18} />
           <span>{actionLabel}</span>
         </button>
       )}

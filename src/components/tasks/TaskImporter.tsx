@@ -8,14 +8,13 @@ interface TaskImporterProps {
   onClose: () => void;
 }
 
-// Interface expandida para suportar estrutura hierárquica
 interface ParsedTask {
   title: string;
   completed: boolean;
   notes?: string;
   steps: TaskStep[];
-  level: number; // Nível de indentação
-  children: ParsedTask[]; // Subtarefas com níveis mais profundos
+  level: number;
+  children: ParsedTask[];
 }
 
 const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
@@ -26,7 +25,6 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
   const [showFormats, setShowFormats] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   
-  // List ID logic (similar to TaskForm)
   const listId = activeListId === 'all' || activeListId === 'important' || activeListId === 'planned'
     ? lists[0]?.id || 'default'
     : activeListId;
@@ -42,27 +40,21 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
       let successCount = 0;
       let failedCount = 0;
       
-      // Função recursiva para criar tarefas e suas subtarefas
       const createTasksRecursively = async (tasks: ParsedTask[], parentTaskId?: string) => {
         for (const task of tasks) {
           try {
-            // Se tem um pai, é uma subtarefa e deve ser adicionada como um passo
             if (parentTaskId) {
-              // Subtarefas profundas são adicionadas como steps de suas tarefas pai
-              // Aqui poderíamos estender para adicionar subtarefas como tarefas relacionadas
-              // se o backend suportar isso
+              // Subtarefas são adicionadas como steps
             } else {
-              // Criar tarefa principal com seus steps diretos
               const createdTask = await createTask({
                 title: task.title,
                 completed: task.completed,
-                important: task.title.includes('★') || task.title.includes('!') || task.title.includes('IMPORTANT'),
+                important: task.title.includes('★') || task.title.includes('!') || task.title.includes('IMPORTANTE'),
                 notes: task.notes || undefined,
                 listId,
                 steps: task.steps
               });
               
-              // Se houver filhos além dos steps diretos, criar eles recursivamente
               if (task.children.length > 0 && createdTask) {
                 await createTasksRecursively(task.children, createdTask.id);
               }
@@ -70,7 +62,7 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
               successCount++;
             }
           } catch (error) {
-            console.error('Failed to import task:', task.title, error);
+            console.error('Falha ao importar tarefa:', task.title, error);
             failedCount++;
           }
         }
@@ -80,7 +72,7 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
       
       setImportResult({ success: successCount, failed: failedCount });
     } catch (error) {
-      console.error('Import parsing error:', error);
+      console.error('Erro de parsing na importação:', error);
       setImportResult({ success: 0, failed: 1 });
     } finally {
       setIsImporting(false);
@@ -94,7 +86,6 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
     
     const now = new Date().toISOString();
     
-    // Detectar níveis de indentação
     const indentationLevels: number[] = [];
     for (const line of lines) {
       if (!line.trim()) continue;
@@ -115,14 +106,12 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
       const line = lines[i];
       const trimmedLine = line.trim();
       
-      // Detectar blocos de código
       if (trimmedLine.startsWith('```')) {
         isInCodeBlock = !isInCodeBlock;
         if (currentNotes) currentNotes += '\n' + line;
         continue;
       }
       
-      // Se estamos em um bloco de código, adicionar às notas
       if (isInCodeBlock) {
         if (currentNotes) currentNotes += '\n' + line;
         else currentNotes = line;
@@ -130,7 +119,6 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
       }
       
       if (!trimmedLine) {
-        // Linha vazia - se temos notas acumuladas, anexar à tarefa pendente
         if (currentNotes && pendingTask) {
           pendingTask.notes = currentNotes.trim();
           currentNotes = '';
@@ -139,7 +127,6 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
         continue;
       }
       
-      // Determinar nível de indentação
       const leadingSpaces = line.search(/\S|$/);
       let indentLevel = 0;
       
@@ -148,21 +135,14 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
         if (indentLevel === 0) indentLevel = 1;
       }
       
-      // Detectar diferentes formatos de tarefas
       const taskPatterns = [
-        // Markdown checkbox format
         /^-\s*\[([ xX✓✗])\]\s+(.+)$/,
         /^\*\s*\[([ xX✓✗])\]\s+(.+)$/,
         /^\+\s*\[([ xX✓✗])\]\s+(.+)$/,
-        // Unicode checkbox format
         /^(⬜|✅|☐|☑|✓|✗)\s+(.+)$/,
-        // Simple list format (assumir não completa)
         /^[-*+]\s+(.+)$/,
-        // Numbered list format
         /^\d+\.\s+(.+)$/,
-        // Text with completion indicators
-        /^(DONE|TODO|COMPLETED?):\s*(.+)$/i,
-        // Obsidian/Notion format
+        /^(FEITO|TODO|CONCLUÍDO?):\s*(.+)$/i,
         /^-\s+(.+)$/,
       ];
       
@@ -181,37 +161,34 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
         let completed = false;
         let title = '';
         
-        // Processar diferentes formatos
         switch (patternIndex) {
-          case 0: // Markdown checkbox
+          case 0:
           case 1:
           case 2:
             completed = ['x', 'X', '✓', '✗'].includes(taskMatch[1]);
             title = taskMatch[2].trim();
             break;
-          case 3: // Unicode checkbox
+          case 3:
             completed = ['✅', '☑', '✓'].includes(taskMatch[1]);
             title = taskMatch[2].trim();
             break;
-          case 4: // Simple list
-          case 5: // Numbered list
-          case 7: // Obsidian/Notion
+          case 4:
+          case 5:
+          case 7:
             completed = false;
             title = taskMatch[1].trim();
             break;
-          case 6: // DONE/TODO format
-            completed = taskMatch[1].toLowerCase() === 'done' || taskMatch[1].toLowerCase() === 'completed';
+          case 6:
+            completed = taskMatch[1].toLowerCase() === 'feito' || taskMatch[1].toLowerCase() === 'concluído';
             title = taskMatch[2].trim();
             break;
         }
         
-        // Extrair prioridade do título
         const priorityMatch = title.match(/^(!{1,3})\s*(.+)$/);
         if (priorityMatch) {
           title = priorityMatch[2].trim();
         }
         
-        // Extrair tags do título
         const tagMatch = title.match(/^(.+?)\s+(#\w+(?:\s+#\w+)*)$/);
         let tags = '';
         if (tagMatch) {
@@ -219,10 +196,9 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
           tags = tagMatch[2];
         }
         
-        // Extrair notas inline
         let notes: string | undefined;
         const inlineNotesPatterns = [
-          /^(.+?)\s+Notes?:\s+(.+)$/i,
+          /^(.+?)\s+Notas?:\s+(.+)$/i,
           /^(.+?)\s+\((.+)\)$/,
           /^(.+?)\s+-\s+(.+)$/,
           /^(.+?)\s+\/\/\s*(.+)$/,
@@ -251,13 +227,11 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
           children: []
         };
         
-        // Anexar notas acumuladas à tarefa anterior se houver
         if (currentNotes && pendingTask) {
           pendingTask.notes = currentNotes.trim();
           currentNotes = '';
         }
         
-        // Gerenciar hierarquia de tarefas
         if (indentLevel === 0) {
           rootTasks.push(newTask);
           taskStack.length = 0;
@@ -292,13 +266,12 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
         
         pendingTask = newTask;
       } else {
-        // Linha não é uma tarefa - pode ser uma nota
         const notePatterns = [
-          /^Notes?:\s*(.+)$/i,
-          /^Description:\s*(.+)$/i,
-          /^Details?:\s*(.+)$/i,
-          /^>\s*(.+)$/, // Markdown quote
-          /^\s*\/\/\s*(.+)$/, // Comment style
+          /^Notas?:\s*(.+)$/i,
+          /^Descrição:\s*(.+)$/i,
+          /^Detalhes?:\s*(.+)$/i,
+          /^>\s*(.+)$/,
+          /^\s*\/\/\s*(.+)$/,
         ];
         
         let isNote = false;
@@ -312,7 +285,6 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
           }
         }
         
-        // Se não é uma nota padrão mas parece ser conteúdo adicional
         if (!isNote && trimmedLine && !trimmedLine.startsWith('#') && pendingTask) {
           if (currentNotes) currentNotes += '\n' + trimmedLine;
           else currentNotes = trimmedLine;
@@ -320,7 +292,6 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
       }
     }
     
-    // Anexar notas finais se houver
     if (currentNotes && pendingTask) {
       pendingTask.notes = currentNotes.trim();
     }
@@ -351,7 +322,7 @@ const TaskImporter: React.FC<TaskImporterProps> = ({ onClose }) => {
 
 **Formato TODO:**
 TODO: Fazer algo
-DONE: Tarefa concluída
+FEITO: Tarefa concluída
 
 **Com Prioridade:**
 ! Tarefa importante
@@ -360,7 +331,7 @@ DONE: Tarefa concluída
 
 **Com Notas:**
 - [ ] Tarefa principal
-  Notes: Detalhes da tarefa
+  Notas: Detalhes da tarefa
 - [ ] Outra tarefa (com nota inline)
 - [ ] Tarefa // comentário
 - [ ] Tarefa #tag #importante
@@ -370,55 +341,46 @@ DONE: Tarefa concluída
   - [ ] Subtarefa
     - [ ] Sub-subtarefa
       - [ ] Nível mais profundo
-
-**Notas em Bloco:**
-\`\`\`
-Código ou texto
-em múltiplas linhas
-\`\`\`
-
-> Citação ou nota
-> em múltiplas linhas
 `;
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
       <form
         ref={formRef}
         onSubmit={handleImport}
-        className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg w-full max-w-2xl overflow-hidden"
+        className="card-elevated w-full max-w-2xl max-h-[90vh] overflow-hidden animate-scale-in"
       >
-        <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="p-6 border-b border-outline-variant/20">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+            <h2 className="text-xl font-medium text-surface-900 dark:text-surface-50">
               Importar Tarefas
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 transition-colors ripple"
             >
               <X size={20} />
             </button>
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {!importResult ? (
             <>
               <div className="mb-4">
                 <button
                   type="button"
                   onClick={() => setShowFormats(!showFormats)}
-                  className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+                  className="btn-text flex items-center gap-2 text-sm"
                 >
-                  <Info size={16} className="mr-1" />
+                  <Info size={16} />
                   {showFormats ? 'Ocultar' : 'Ver'} formatos suportados
                 </button>
                 
                 {showFormats && (
-                  <div className="mt-2 p-3 bg-neutral-50 dark:bg-neutral-800 rounded text-xs">
-                    <pre className="whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
+                  <div className="mt-3 p-4 bg-surface-100 dark:bg-surface-800 rounded-2xl text-xs animate-slide-down">
+                    <pre className="whitespace-pre-wrap text-surface-700 dark:text-surface-300">
                       {formatExamples}
                     </pre>
                   </div>
@@ -434,7 +396,7 @@ Markdown:
 - [ ] Tarefa não concluída
 - [x] Tarefa concluída
   - [ ] Subtarefa
-    Notes: Detalhes aqui
+    Notas: Detalhes aqui
 
 Unicode:
 ⬜ Tarefa pendente
@@ -451,34 +413,34 @@ Com prioridade e tags:
 
 Formatos TODO:
 TODO: Fazer algo
-DONE: Tarefa concluída`}
-                className="w-full h-80 p-3 border border-neutral-300 dark:border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-300 text-sm font-mono bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400"
+FEITO: Tarefa concluída`}
+                className="input-field w-full h-80 font-mono text-sm resize-none"
               />
             </>
           ) : (
-            <div className="py-4 text-center">
-              <div className="mb-4 flex justify-center">
+            <div className="py-8 text-center animate-fade-in">
+              <div className="mb-6 flex justify-center">
                 {importResult.failed === 0 ? (
-                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
+                  <div className="w-16 h-16 bg-success-100 dark:bg-success-900/30 rounded-3xl flex items-center justify-center text-success-600 dark:text-success-400">
                     <Check size={32} />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+                  <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-3xl flex items-center justify-center text-amber-600 dark:text-amber-400">
                     <span className="text-2xl font-bold">!</span>
                   </div>
                 )}
               </div>
               
-              <h3 className="text-lg font-medium mb-2 text-neutral-800 dark:text-neutral-200">
+              <h3 className="text-xl font-medium mb-3 text-surface-900 dark:text-surface-50">
                 {importResult.failed === 0 ? 'Importação Concluída' : 'Importação Concluída com Problemas'}
               </h3>
               
-              <p className="text-neutral-600 dark:text-neutral-400">
-                Tarefas importadas com sucesso: <span className="font-medium text-green-600 dark:text-green-400">{importResult.success}</span>
+              <p className="text-surface-600 dark:text-surface-400">
+                Tarefas importadas com sucesso: <span className="font-medium text-success-600 dark:text-success-400">{importResult.success}</span>
                 {importResult.failed > 0 && (
                   <>
                     <br />
-                    Falha ao importar: <span className="font-medium text-red-600 dark:text-red-400">{importResult.failed}</span> tarefas
+                    Falha ao importar: <span className="font-medium text-error-600 dark:text-error-400">{importResult.failed}</span> tarefas
                   </>
                 )}
               </p>
@@ -486,13 +448,13 @@ DONE: Tarefa concluída`}
           )}
         </div>
         
-        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 flex justify-end">
+        <div className="p-6 bg-surface-100 dark:bg-surface-800 border-t border-outline-variant/20 flex justify-end gap-3">
           {!importResult ? (
             <>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-700 rounded mr-2"
+                className="btn-outlined"
               >
                 Cancelar
               </button>
@@ -500,23 +462,20 @@ DONE: Tarefa concluída`}
               <button
                 type="submit"
                 disabled={!importText.trim() || isImporting}
-                className={`px-4 py-2 rounded flex items-center ${
+                className={`btn-filled flex items-center gap-2 ${
                   !importText.trim() || isImporting
-                    ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed dark:bg-neutral-700 dark:text-neutral-500'
-                    : 'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600'
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
                 }`}
               >
                 {isImporting ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Importando...
                   </>
                 ) : (
                   <>
-                    <FileUp size={16} className="mr-2" />
+                    <FileUp size={16} />
                     Importar
                   </>
                 )}
@@ -526,7 +485,7 @@ DONE: Tarefa concluída`}
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 rounded"
+              className="btn-filled"
             >
               Concluído
             </button>
