@@ -2,40 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Configurações globais para dark mode */
-html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* Material Design 3 Base Styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-surface-50 text-surface-900 font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  .dark body {
+    @apply bg-surface-950 text-surface-50;
+  }
 }
 
-.dark {
-  color-scheme: dark;
+/* Material Design 3 Components */
+@layer components {
+  /* Buttons */
+  .btn-filled {
+    @apply bg-primary-500 text-white px-6 py-3 rounded-3xl font-medium shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-200 active:scale-95;
+  }
+  
+  .btn-outlined {
+    @apply border border-outline text-primary-500 px-6 py-3 rounded-3xl font-medium hover:bg-primary-50 transition-all duration-200 active:scale-95;
+  }
+  
+  .btn-text {
+    @apply text-primary-500 px-4 py-2 rounded-2xl font-medium hover:bg-primary-50 transition-all duration-200 active:scale-95;
+  }
+  
+  .btn-fab {
+    @apply bg-primary-500 text-white w-14 h-14 rounded-2xl shadow-elevation-3 hover:shadow-elevation-4 transition-all duration-200 active:scale-95 flex items-center justify-center;
+  }
+  
+  /* Cards */
+  .card {
+    @apply bg-surface-50 dark:bg-surface-900 rounded-2xl shadow-elevation-1 border border-outline-variant/20;
+  }
+  
+  .card-elevated {
+    @apply bg-surface-50 dark:bg-surface-900 rounded-2xl shadow-elevation-2;
+  }
+  
+  /* Input Fields */
+  .input-field {
+    @apply bg-surface-100 dark:bg-surface-800 border border-outline-variant rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  /* Navigation */
+  .nav-rail {
+    @apply bg-surface-100 dark:bg-surface-900 border-r border-outline-variant/20;
+  }
+  
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-2xl mx-2 transition-all duration-200 hover:bg-surface-200 dark:hover:bg-surface-800;
+  }
+  
+  .nav-item-active {
+    @apply bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300;
+  }
+  
+  /* Ripple Effect */
+  .ripple {
+    @apply relative overflow-hidden;
+  }
+  
+  .ripple::before {
+    content: '';
+    @apply absolute inset-0 bg-current opacity-0 rounded-inherit pointer-events-none;
+    transition: opacity 0.2s;
+  }
+  
+  .ripple:active::before {
+    @apply opacity-10;
+  }
 }
 
-/* Customização de scrollbar para dark mode */
-.dark ::-webkit-scrollbar {
+/* Custom Scrollbar */
+::-webkit-scrollbar {
   width: 8px;
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: #1f2937;
+::-webkit-scrollbar-track {
+  @apply bg-surface-100 dark:bg-surface-800;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 4px;
+::-webkit-scrollbar-thumb {
+  @apply bg-outline-variant rounded-full;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-outline;
 }
 
-/* Estilos para inputs em dark mode */
-.dark input[type="checkbox"] {
-  background-color: #374151;
-  border-color: #4b5563;
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-.dark input[type="checkbox"]:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
+/* Focus styles */
+.focus-visible {
+  @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-surface-50 dark:ring-offset-surface-950;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }

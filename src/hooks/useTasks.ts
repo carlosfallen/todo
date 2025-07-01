@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Task, TaskFilter } from '../types';
 import { taskStorage } from '../services/localStorage';
-import { taskAPI } from '../services/taskAPI';
+import { taskAPI } from '../services/optimizedTaskAPI';
  
 export default function useTasks(listId?: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -15,6 +15,20 @@ export default function useTasks(listId?: string) {
     sortBy: 'createdAt'
   });
 
+  // Real-time subscription to tasks
+  useEffect(() => {
+    const unsubscribe = taskAPI.subscribeToTasks((updatedTasks) => {
+      setTasks(updatedTasks);
+      setLoading(false);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
   // Fetch tasks from API or localStorage if API fails
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -24,88 +38,113 @@ export default function useTasks(listId?: string) {
       const allTasks = await taskAPI.getAllTasks();
       setTasks(allTasks);
     } catch (err) {
-      console.error('Failed to fetch tasks from API, falling back to localStorage', err);
+      console.error('Falha ao buscar tarefas da API, usando localStorage', err);
       try {
-        // Fall back to localStorage
         const localTasks = taskStorage.getAllTasks();
         setTasks(localTasks);
       } catch (localErr) {
-        setError('Failed to load tasks');
-        console.error('Failed to load tasks from localStorage', localErr);
+        setError('Falha ao carregar tarefas');
+        console.error('Falha ao carregar tarefas do localStorage', localErr);
       }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
-  // Create a new task
+  // Create a new task with optimistic updates
   const createTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      // Optimistic update - add task immediately to UI
+      const tempTask: Task = {
+        ...task,
+        id: `temp_${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      setTasks(prev => [tempTask, ...prev]);
+      
       const newTask = await taskAPI.createTask(task);
-      setTasks(prev => [...prev, newTask]);
+      
+      // Replace temp task with real task
+      setTasks(prev => prev.map(t => t.id === tempTask.id ? newTask : t));
+      
       return newTask;
     } catch (err) {
-      console.error('Failed to create task with API, falling back to localStorage', err);
+      console.error('Falha ao criar tarefa com API, usando localStorage', err);
       try {
-        // Fall back to localStorage
         const localTask = taskStorage.createTask(task);
-        setTasks(prev => [...prev, localTask]);
+        setTasks(prev => prev.map(t => t.id.startsWith('temp_') ? localTask : t));
         return localTask;
       } catch (localErr) {
-        setError('Failed to create task');
-        console.error('Failed to create task in localStorage', localErr);
+        setError('Falha ao criar tarefa');
+        console.error('Falha ao criar tarefa no localStorage', localErr);
+        // Remove temp task on error
+        setTasks(prev => prev.filter(t => !t.id.startsWith('temp_')));
         throw localErr;
       }
     }
   }, []);
 
-  // Update a task
+  // Update a task with optimistic updates
   const updateTask = useCallback(async (taskId: string, updatedTask: Partial<Task>) => {
     try {
+      // Optimistic update
+      setTasks(prev => prev.map(task => 
+        task.id === taskId 
+          ? { ...task, ...updatedTask, updatedAt: new Date().toISOString() }
+          : task
+      ));
+      
       const updated = await taskAPI.updateTask(taskId, updatedTask);
+      
+      // Update with server response
       setTasks(prev => prev.map(task => task.id === taskId ? updated : task));
+      
       return updated;
     } catch (err) {
-      console.error('Failed to update task with API, falling back to localStorage', err);
+      console.error('Falha ao atualizar tarefa com API, usando localStorage', err);
       try {
-        // Fall back to localStorage
         const localUpdated = taskStorage.updateTask(taskId, updatedTask);
         setTasks(prev => prev.map(task => task.id === taskId ? localUpdated : task));
         return localUpdated;
       } catch (localErr) {
-        setError('Failed to update task');
-        console.error('Failed to update task in localStorage', localErr);
+        setError('Falha ao atualizar tarefa');
+        console.error('Falha ao atualizar tarefa no localStorage', localErr);
+        // Revert optimistic update
+        fetchTasks();
         throw localErr;
       }
     }
-  }, []);
+  }, [fetchTasks]);
 
-  // Delete a task
+  // Delete a task with optimistic updates
   const deleteTask = useCallback(async (taskId: string) => {
     try {
-      await taskAPI.deleteTask(taskId);
+      // Optimistic delete
+      const taskToDelete = tasks.find(t => t.id === taskId);
       setTasks(prev => prev.filter(task => task.id !== taskId));
+      
+      await taskAPI.deleteTask(taskId);
       return true;
     } catch (err) {
-      console.error('Failed to delete task with API, falling back to localStorage', err);
+      console.error('Falha ao deletar tarefa com API, usando localStorage', err);
       try {
-        // Fall back to localStorage
         const success = taskStorage.deleteTask(taskId);
-        if (success) {
-          setTasks(prev => prev.filter(task => task.id !== taskId));
+        if (!success) {
+          // Revert optimistic delete
+          fetchTasks();
         }
         return success;
       } catch (localErr) {
-        setError('Failed to delete task');
-        console.error('Failed to delete task in localStorage', localErr);
+        setError('Falha ao deletar tarefa');
+        console.error('Falha ao deletar tarefa no localStorage', localErr);
+        // Revert optimistic delete
+        fetchTasks();
         throw localErr;
       }
     }
-  }, []);
+  }, [tasks, fetchTasks]);
 
   // Toggle task completion
   const toggleTaskCompletion = useCallback(async (taskId: string) => {
