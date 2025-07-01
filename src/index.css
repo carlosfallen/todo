@@ -71,7 +71,7 @@
   
   .ripple::before {
     content: '';
-    @apply absolute inset-0 bg-current opacity-0 rounded-inherit pointer-events-none;
+    @apply absolute inset-0 bg-current opacity-0 rounded pointer-events-none;
     transition: opacity 0.2s;
   }
   
