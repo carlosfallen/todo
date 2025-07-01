@@ -4,8 +4,8 @@
 
 /* Material Design 3 Base Styles */
 @layer base {
-  * {
-    @apply border-border;
+  .border-border {
+    border: 1px solid theme('colors.border');
   }
   
   body {
