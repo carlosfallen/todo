@@ -59,185 +59,155 @@ const Header: React.FC = () => {
     setFilter(prev => ({ ...prev, completed: !prev.completed }));
   };
   
+  const hasActiveFilters = filter.important || filter.completed || filter.search;
+  
   return (
-    <header className="bg-surface-50 dark:bg-surface-900 shadow-elevation-1 p-4 md:p-6 flex flex-col gap-4 transition-colors">
+    <header className="surface-container shadow-elevation-1 p-4 md:p-6 flex flex-col gap-4 transition-all duration-200 border-b divider">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <button 
-            className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple md:hidden"
+            className="btn-icon md:hidden"
             onClick={toggleSidebar}
             aria-label="Abrir menu"
           >
-            <Menu size={20} className="text-surface-700 dark:text-surface-300" />
+            <Menu size={20} />
           </button>
           
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-medium text-surface-900 dark:text-surface-50 truncate">
-              {activeList ? activeList.name : 'Todas'}
+            <h1 className="text-headline-medium text-on-surface truncate">
+              {activeList ? activeList.name : 'Todas as Tarefas'}
             </h1>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           <button
-            className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple md:hidden"
+            className="btn-icon md:hidden"
             onClick={() => setShowSearchBar(!showSearchBar)}
             aria-label="Buscar"
           >
-            <Search size={20} className="text-surface-700 dark:text-surface-300" />
+            <Search size={20} />
           </button>
           
           <button
-            className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple"
+            className="btn-icon"
             onClick={() => setShowImporter(true)}
             aria-label="Importar tarefas"
           >
-            <Upload size={20} className="text-surface-700 dark:text-surface-300" />
+            <Upload size={20} />
           </button>
 
           <div className="relative hidden md:block">
-            <Search 
-              size={18} 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" 
-            />
-            <input
-              type="text"
-              placeholder="Buscar tarefas..."
-              value={filter.search}
-              onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-              className="input-field pl-10 pr-10 py-3 w-64 rounded-3xl"
-            />
-            {filter.search && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors ripple"
-              >
-                <X size={16} />
-              </button>
-            )}
+            <div className="relative">
+              <Search 
+                size={18} 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant" 
+              />
+              <input
+                type="text"
+                placeholder="Buscar tarefas..."
+                value={filter.search}
+                onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
+                className="input-field pl-10 pr-10 py-3 w-64 rounded-3xl"
+              />
+              {filter.search && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors ripple p-1 rounded-full"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="relative">
             <button
-              className={`p-2 rounded-xl transition-colors ripple ${
-                showFilterMenu || Object.values(filter).some(Boolean) 
+              className={`btn-icon ${
+                showFilterMenu || hasActiveFilters
                   ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                  : 'hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
+                  : ''
               }`}
               onClick={() => setShowFilterMenu(!showFilterMenu)}
               aria-label="Filtrar tarefas"
             >
               <Filter size={20} />
+              {hasActiveFilters && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-600 rounded-full"></div>
+              )}
             </button>
             
             {showFilterMenu && (
               <div 
                 ref={filterMenuRef}
-                className="absolute right-0 mt-2 w-72 card-elevated z-20 animate-slide-down"
+                className="absolute right-0 mt-2 w-80 card-elevated z-20 animate-scale-in"
               >
-                <div className="p-4">
-                  <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-3">
+                <div className="p-6">
+                  <h3 className="text-title-medium text-on-surface mb-4">
                     Ordenar por
                   </h3>
-                  <div className="space-y-1">
-                    <button
-                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
-                        filter.sortBy === 'importance' 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
-                      }`}
-                      onClick={() => handleSortChange('importance')}
-                    >
-                      <span className="flex items-center gap-3">
-                        <Star size={16} />
-                        Importância
-                      </span>
-                      {filter.sortBy === 'importance' && <ArrowUpDown size={16} />}
-                    </button>
-                    
-                    <button
-                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
-                        filter.sortBy === 'dueDate' 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
-                      }`}
-                      onClick={() => handleSortChange('dueDate')}
-                    >
-                      <span className="flex items-center gap-3">
-                        <Calendar size={16} />
-                        Data de vencimento
-                      </span>
-                      {filter.sortBy === 'dueDate' && <ArrowUpDown size={16} />}
-                    </button>
-                    
-                    <button
-                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
-                        filter.sortBy === 'alphabetical' 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
-                      }`}
-                      onClick={() => handleSortChange('alphabetical')}
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="text-lg font-medium">A-Z</span>
-                        Alfabética
-                      </span>
-                      {filter.sortBy === 'alphabetical' && <ArrowUpDown size={16} />}
-                    </button>
-                    
-                    <button
-                      className={`flex items-center justify-between w-full p-3 rounded-xl transition-colors ripple ${
-                        filter.sortBy === 'createdAt' 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
-                      }`}
-                      onClick={() => handleSortChange('createdAt')}
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="text-lg font-medium">+</span>
-                        Data de criação
-                      </span>
-                      {filter.sortBy === 'createdAt' && <ArrowUpDown size={16} />}
-                    </button>
+                  <div className="space-y-1 mb-6">
+                    {[
+                      { key: 'importance', icon: Star, label: 'Importância' },
+                      { key: 'dueDate', icon: Calendar, label: 'Data de vencimento' },
+                      { key: 'alphabetical', icon: () => <span className="text-lg font-medium">A-Z</span>, label: 'Alfabética' },
+                      { key: 'createdAt', icon: () => <span className="text-lg font-medium">+</span>, label: 'Data de criação' }
+                    ].map(({ key, icon: Icon, label }) => (
+                      <button
+                        key={key}
+                        className={`flex items-center justify-between w-full p-3 rounded-xl transition-all duration-200 ripple ${
+                          filter.sortBy === key 
+                            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
+                            : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-on-surface'
+                        }`}
+                        onClick={() => handleSortChange(key as TaskSortOption)}
+                      >
+                        <span className="flex items-center gap-3">
+                          <Icon size={16} />
+                          <span className="text-body-large">{label}</span>
+                        </span>
+                        {filter.sortBy === key && <ArrowUpDown size={16} />}
+                      </button>
+                    ))}
                   </div>
-                </div>
-                
-                <div className="border-t border-outline-variant/20 p-4">
-                  <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-3">
-                    Filtros
-                  </h3>
-                  <div className="space-y-2">
-                    <label
-                      className={`flex items-center w-full p-3 rounded-xl cursor-pointer transition-colors ripple ${
-                        filter.important 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filter.important}
-                        onChange={handleImportantFilterToggle}
-                        className="mr-3 h-4 w-4 text-primary-600 rounded border-outline focus:ring-primary-500"
-                      />
-                      <span>Apenas tarefas importantes</span>
-                    </label>
-                    
-                    <label
-                      className={`flex items-center w-full p-3 rounded-xl cursor-pointer transition-colors ripple ${
-                        filter.completed 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
-                          : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filter.completed}
-                        onChange={handleCompletedFilterToggle}
-                        className="mr-3 h-4 w-4 text-primary-600 rounded border-outline focus:ring-primary-500"
-                      />
-                      <span>Tarefas concluídas</span>
-                    </label>
+                  
+                  <div className="border-t divider pt-4">
+                    <h3 className="text-title-medium text-on-surface mb-4">
+                      Filtros
+                    </h3>
+                    <div className="space-y-2">
+                      <label
+                        className={`flex items-center w-full p-3 rounded-xl cursor-pointer transition-all duration-200 ripple ${
+                          filter.important 
+                            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
+                            : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-on-surface'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filter.important}
+                          onChange={handleImportantFilterToggle}
+                          className="mr-3 h-4 w-4 text-primary-600 rounded border-surface-300 focus:ring-primary-500"
+                        />
+                        <span className="text-body-large">Apenas tarefas importantes</span>
+                      </label>
+                      
+                      <label
+                        className={`flex items-center w-full p-3 rounded-xl cursor-pointer transition-all duration-200 ripple ${
+                          filter.completed 
+                            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
+                            : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-on-surface'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filter.completed}
+                          onChange={handleCompletedFilterToggle}
+                          className="mr-3 h-4 w-4 text-primary-600 rounded border-surface-300 focus:ring-primary-500"
+                        />
+                        <span className="text-body-large">Tarefas concluídas</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -250,7 +220,7 @@ const Header: React.FC = () => {
             aria-label="Adicionar tarefa"
           >
             <Plus size={18} />
-            <span className="hidden md:ml-2 md:inline">Nova Tarefa</span>
+            <span className="hidden md:ml-2 md:inline text-label-large">Nova Tarefa</span>
           </button>
         </div>
       </div>
@@ -259,7 +229,7 @@ const Header: React.FC = () => {
         <div className="relative md:hidden animate-slide-down">
           <Search 
             size={18} 
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant" 
           />
           <input
             ref={searchInputRef}
@@ -272,14 +242,14 @@ const Header: React.FC = () => {
           {filter.search ? (
             <button
               onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors ripple"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors ripple p-1 rounded-full"
             >
               <X size={16} />
             </button>
           ) : (
             <button
               onClick={() => setShowSearchBar(false)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors ripple"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors ripple p-1 rounded-full"
             >
               <X size={16} />
             </button>

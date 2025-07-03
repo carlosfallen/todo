@@ -77,7 +77,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
     if (isPast(dueDate) && !isToday(dueDate)) return 'text-error-600 dark:text-error-400';
     if (isToday(dueDate)) return 'text-primary-600 dark:text-primary-400';
     
-    return 'text-surface-600 dark:text-surface-400';
+    return 'text-on-surface-variant';
   };
   
   const completedSteps = task.steps.filter(step => step.completed).length;
@@ -90,10 +90,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   
   return (
     <div 
-      className={`card p-4 mb-3 transition-all duration-200 hover:shadow-elevation-2 rounded-xl ${
+      className={`card-interactive p-4 mb-3 transition-all duration-200 ${
         task.completed 
           ? 'opacity-60' 
-          : 'hover:-translate-y-0.5'
+          : ''
       } ripple animate-fade-in relative ${showOptions ? 'z-50' : 'z-0'} ${showOptions ? 'overflow-visible' : 'overflow-hidden'}`}
     >
       <div className="flex items-start gap-4">
@@ -101,8 +101,8 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
           onClick={handleToggleComplete}
           className={`flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all duration-200 ${
             task.completed
-              ? 'bg-primary-500 border-primary-500 dark:bg-primary-400 dark:border-primary-400' 
-              : 'border-outline hover:border-primary-500'
+              ? 'bg-primary-600 border-primary-600 dark:bg-primary-500 dark:border-primary-500' 
+              : 'border-surface-400 hover:border-primary-600'
           } flex items-center justify-center mt-0.5 ripple`}
           aria-label={task.completed ? "Marcar como não concluída" : "Marcar como concluída"}
         >
@@ -113,26 +113,26 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <h3 
-                className={`text-base font-medium transition-all duration-200 ${
+                className={`text-body-large font-medium transition-all duration-200 ${
                   task.completed 
-                    ? 'line-through text-surface-500 dark:text-surface-400' 
-                    : 'text-surface-900 dark:text-surface-50'
+                    ? 'line-through text-on-surface-variant' 
+                    : 'text-on-surface'
                 }`}
               >
                 {task.title}
               </h3>
               
               {hasSteps && (
-                <div className="mt-1 text-sm text-surface-600 dark:text-surface-400">
+                <div className="mt-1 text-body-small text-on-surface-variant">
                   {completedSteps} de {totalSteps} etapas concluídas
                 </div>
               )}
               
               {task.notes && (
-                <p className={`text-sm mt-2 line-clamp-2 ${
+                <p className={`text-body-medium mt-2 line-clamp-2 ${
                   task.completed 
-                    ? 'text-surface-400 dark:text-surface-500' 
-                    : 'text-surface-600 dark:text-surface-400'
+                    ? 'text-on-surface-variant opacity-70' 
+                    : 'text-on-surface-variant'
                 }`}>
                   {task.notes}
                 </p>
@@ -142,7 +142,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
             <div className="flex items-center gap-2 flex-shrink-0">
               {task.dueDate && (
                 <span 
-                  className={`text-xs flex items-center gap-1 px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-800 ${getDueDateClass(task.dueDate)}`}
+                  className={`text-label-small flex items-center gap-1 px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-800 ${getDueDateClass(task.dueDate)}`}
                 >
                   <Calendar size={12} />
                   {formatDueDate(task.dueDate)}
@@ -151,10 +151,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               
               <button
                 onClick={handleToggleImportant}
-                className={`p-2 rounded-xl transition-colors ripple ${
+                className={`btn-icon ${
                   task.important 
                     ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20' 
-                    : 'text-surface-400 hover:text-surface-600 dark:text-surface-500 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800'
+                    : 'text-on-surface-variant hover:text-amber-500'
                 }`}
                 aria-label={task.important ? "Remover importância" : "Marcar como importante"}
               >
@@ -164,7 +164,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowOptions(!showOptions)}
-                  className="p-2 rounded-xl text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-surface-500 dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors ripple"
+                  className="btn-icon"
                   aria-label="Mais opções"
                 >
                   <MoreVertical size={16} />
@@ -173,22 +173,19 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 {showOptions && (
                   <div 
                     ref={optionsRef}
-                    className="absolute right-0 top-full mt-1 z-[100] bg-white dark:bg-surface-900 rounded-xl shadow-lg border border-outline-variant/20 min-w-48 animate-scale-in"
-                    style={{ 
-                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' 
-                    }}
+                    className="absolute right-0 top-full mt-1 z-[100] bg-surface-50 dark:bg-surface-900 rounded-xl shadow-elevation-3 border border-surface-200/50 dark:border-surface-800/50 min-w-48 animate-scale-in"
                   >
                     <div className="py-2">
                       <button
                         onClick={handleEditTask}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800 transition-colors ripple"
+                        className="flex w-full items-center gap-3 px-4 py-3 text-body-medium text-on-surface hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors ripple"
                       >
                         <Edit size={16} />
                         Editar
                       </button>
                       <button
                         onClick={handleDeleteTask}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-error-600 hover:bg-error-50 dark:text-error-400 dark:hover:bg-error-900/20 transition-colors ripple"
+                        className="flex w-full items-center gap-3 px-4 py-3 text-body-medium text-error-600 hover:bg-error-50 dark:text-error-400 dark:hover:bg-error-900/20 transition-colors ripple"
                       >
                         <Trash2 size={16} />
                         Deletar
@@ -204,7 +201,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
             <div className="mt-3">
               <button
                 onClick={() => setShowSteps(!showSteps)}
-                className="flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 transition-colors ripple"
+                className="flex items-center gap-2 text-body-small text-on-surface-variant hover:text-on-surface transition-colors ripple"
               >
                 {showSteps ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 <span>{showSteps ? 'Ocultar etapas' : 'Mostrar etapas'}</span>
@@ -221,24 +218,24 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                         onClick={() => handleToggleStep(step.id)}
                         className={`flex-shrink-0 w-4 h-4 mt-1 rounded border transition-all duration-200 ${
                           step.completed
-                            ? 'bg-primary-500 border-primary-500 dark:bg-primary-400 dark:border-primary-400' 
-                            : 'border-outline hover:border-primary-500'
+                            ? 'bg-primary-600 border-primary-600 dark:bg-primary-500 dark:border-primary-500' 
+                            : 'border-surface-400 hover:border-primary-600'
                         } ripple`}
                       >
                         {step.completed && <Check size={10} className="text-white" />}
                       </button>
                       
                       <div className="flex-1">
-                        <div className={`text-sm transition-all duration-200 ${
+                        <div className={`text-body-medium transition-all duration-200 ${
                           step.completed 
-                            ? 'line-through text-surface-500 dark:text-surface-400' 
-                            : 'text-surface-800 dark:text-surface-200'
+                            ? 'line-through text-on-surface-variant' 
+                            : 'text-on-surface'
                         }`}>
                           {step.title}
                         </div>
                         
                         {(step.dueDate || step.assignee) && (
-                          <div className="flex items-center gap-3 mt-1 text-xs text-surface-500 dark:text-surface-400">
+                          <div className="flex items-center gap-3 mt-1 text-label-small text-on-surface-variant">
                             {step.dueDate && (
                               <span className="flex items-center gap-1">
                                 <Calendar size={10} />

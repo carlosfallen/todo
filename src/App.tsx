@@ -6,13 +6,13 @@ import { AppProvider } from './contexts/AppContext';
 function App() {
   return (
     <AppProvider>
-      <div className="min-h-screen bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
-        <div className="md:flex md:min-h-screen"> {/* Adiciona min-h-screen aqui também */}
+      <div className="min-h-screen surface text-on-surface">
+        <div className="flex min-h-screen">
           <Sidebar />
           
-          <div className="flex-1 min-w-0 flex flex-col"> {/* Adiciona flex flex-col */}
+          <div className="flex-1 min-w-0 flex flex-col">
             <Header />
-            <main className=""> {/* Adiciona flex-1 */}
+            <main className="flex-1 overflow-hidden">
               <TaskList />
             </main>
           </div>

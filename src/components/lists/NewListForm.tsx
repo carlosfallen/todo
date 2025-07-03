@@ -9,28 +9,30 @@ interface NewListFormProps {
 const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
   const { createList } = useApp();
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#3B82F6');
+  const [color, setColor] = useState('#6d28d9');
   const formRef = useRef<HTMLFormElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   
   const colorOptions = [
-    '#3B82F6', // Blue
-    '#10B981', // Green
-    '#F97316', // Orange
-    '#EF4444', // Red
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#F59E0B', // Amber
-    '#6B7280', // Gray
+    '#6d28d9', // Primary Purple
+    '#dc2626', // Red
+    '#ea580c', // Orange
+    '#ca8a04', // Yellow
+    '#16a34a', // Green
+    '#0891b2', // Cyan
+    '#2563eb', // Blue
+    '#7c3aed', // Violet
+    '#c2410c', // Orange Red
+    '#059669', // Emerald
+    '#0284c7', // Sky
+    '#7c2d12', // Brown
   ];
   
   useEffect(() => {
-    // Focus the name input when the form mounts
     if (nameInputRef.current) {
       nameInputRef.current.focus();
     }
     
-    // Handle clicks outside the form to close it
     function handleClickOutside(event: MouseEvent) {
       if (formRef.current && !formRef.current.contains(event.target as Node)) {
         onCancel();
@@ -60,39 +62,46 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="mb-3 p-2 bg-white dark:bg-gray-800 rounded-lg border border-neutral-300 dark:border-neutral-600 shadow-sm"
+      className="card p-4 animate-scale-in"
     >
-      <div className="mb-3">
+      <div className="mb-4">
         <input
           ref={nameInputRef}
           type="text"
-          placeholder="List name"
+          placeholder="Nome da lista"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-300 bg-white dark:bg-gray-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500"
+          className="input-field w-full"
         />
       </div>
       
-      <div className="mb-3">
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-4">
+        <label className="text-label-medium text-on-surface-variant mb-2 block">
+          Cor da lista
+        </label>
+        <div className="grid grid-cols-6 gap-2">
           {colorOptions.map(colorOption => (
             <button
               key={colorOption}
               type="button"
               onClick={() => setColor(colorOption)}
-              className={`w-6 h-6 rounded-full border-2 ${color === colorOption ? 'border-neutral-800 dark:border-neutral-200' : 'border-transparent'}`}
+              className={`w-8 h-8 rounded-xl border-2 transition-all duration-200 hover:scale-110 ${
+                color === colorOption 
+                  ? 'border-surface-900 dark:border-surface-100 ring-2 ring-primary-500 ring-offset-2 ring-offset-surface-50 dark:ring-offset-surface-900' 
+                  : 'border-surface-200 dark:border-surface-700 hover:border-surface-400 dark:hover:border-surface-500'
+              }`}
               style={{ backgroundColor: colorOption }}
-              aria-label={`Select color ${colorOption}`}
+              aria-label={`Selecionar cor ${colorOption}`}
             />
           ))}
         </div>
       </div>
       
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <button
           type="button"
           onClick={onCancel}
-          className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+          className="btn-icon"
         >
           <X size={16} />
         </button>
@@ -100,13 +109,9 @@ const NewListForm: React.FC<NewListFormProps> = ({ onCancel }) => {
         <button
           type="submit"
           disabled={!name.trim()}
-          className={`px-3 py-1 rounded text-sm ${
-            name.trim() 
-              ? 'bg-primary-600 text-white hover:bg-primary-700' 
-              : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 dark:text-neutral-500 cursor-not-allowed'
-          }`}
+          className="btn-filled"
         >
-          Create
+          <span className="text-label-large">Criar</span>
         </button>
       </div>
     </form>

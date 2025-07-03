@@ -47,7 +47,7 @@ const TaskList: React.FC = () => {
   
   // Group tasks by date
   const taskGroups = filteredTasks.reduce((groups, task) => {
-    let group = 'No Due Date';
+    let group = 'Sem Data';
     
     if (task.dueDate) {
       const dueDate = new Date(task.dueDate);
@@ -61,15 +61,15 @@ const TaskList: React.FC = () => {
       nextWeek.setDate(nextWeek.getDate() + 7);
       
       if (dueDate < today && !task.completed) {
-        group = 'Overdue';
+        group = 'Atrasadas';
       } else if (dueDate.getTime() === today.getTime()) {
-        group = 'Today';
+        group = 'Hoje';
       } else if (dueDate.getTime() === tomorrow.getTime()) {
-        group = 'Tomorrow';
+        group = 'Amanhã';
       } else if (dueDate < nextWeek) {
-        group = 'This Week';
+        group = 'Esta Semana';
       } else {
-        group = 'Later';
+        group = 'Futuras';
       }
     }
     
@@ -82,50 +82,66 @@ const TaskList: React.FC = () => {
   }, {} as Record<string, typeof filteredTasks>);
   
   // Sort groups by priority
-  const groupOrder = ['Overdue', 'Today', 'Tomorrow', 'This Week', 'Later', 'No Due Date'];
+  const groupOrder = ['Atrasadas', 'Hoje', 'Amanhã', 'Esta Semana', 'Futuras', 'Sem Data'];
   const sortedGroups = Object.entries(taskGroups).sort((a, b) => {
     return groupOrder.indexOf(a[0]) - groupOrder.indexOf(b[0]);
   });
   
+  const getGroupColor = (groupName: string) => {
+    switch (groupName) {
+      case 'Atrasadas':
+        return 'text-error-600 dark:text-error-400';
+      case 'Hoje':
+        return 'text-primary-600 dark:text-primary-400';
+      case 'Amanhã':
+        return 'text-amber-600 dark:text-amber-400';
+      default:
+        return 'text-on-surface-variant';
+    }
+  };
+  
   return (
-    <div className="p-4 bg-neutral-00 dark:bg-neutral-800 min-h-full">
-      {isAddingTask ? (
-        <div className="mb-4">
-          <div className={isAddingTask ? "" : "opacity-0"}>
+    <div className="surface-container min-h-full">
+      <div className="p-4 md:p-6">
+        {isAddingTask && (
+          <div className="mb-6">
             <TaskForm
               onClose={() => setIsAddingTask(false)}
               onTaskSaved={handleTaskSaved}
             />
           </div>
-        </div>
-      ) : null}
+        )}
 
-      {filteredTasks.length === 0 ? (
-        <EmptyState 
-          title={filter.search ? "No matching tasks" : "No tasks yet"}
-          description={filter.search 
-            ? "Try adjusting your search or filters" 
-            : `Add a task to ${activeList ? activeList.name : 'get started'}`
-          }
-          actionLabel="Add a task"
-          onAction={() => setIsAddingTask(true)}
-        />
-      ) : (
-        <div className="space-y-6">
-          {sortedGroups.map(([group, tasks]) => (
-            <div key={group}>
-              <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2 uppercase tracking-wide">
-                {group}
-              </h2>
-              <div className="space-y-1">
-                {tasks.map(task => (
-                  <TaskItem key={task.id} task={task} />
-                ))}
+        {filteredTasks.length === 0 ? (
+          <EmptyState 
+            title={filter.search ? "Nenhuma tarefa encontrada" : "Nenhuma tarefa ainda"}
+            description={filter.search 
+              ? "Tente ajustar sua busca ou filtros" 
+              : `Adicione uma tarefa para ${activeList ? activeList.name : 'começar'}`
+            }
+            actionLabel="Adicionar tarefa"
+            onAction={() => setIsAddingTask(true)}
+          />
+        ) : (
+          <div className="space-y-8">
+            {sortedGroups.map(([group, tasks]) => (
+              <div key={group}>
+                <h2 className={`text-label-large mb-4 uppercase tracking-wide ${getGroupColor(group)}`}>
+                  {group}
+                  <span className="ml-2 text-label-medium opacity-70">
+                    ({tasks.length})
+                  </span>
+                </h2>
+                <div className="space-y-2">
+                  {tasks.map(task => (
+                    <TaskItem key={task.id} task={task} />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

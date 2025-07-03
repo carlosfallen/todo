@@ -118,6 +118,16 @@ const Sidebar: React.FC = () => {
     };
   }, [sidebarOpen, toggleSidebar]);
   
+  const CountBadge: React.FC<{ count: number }> = ({ count }) => {
+    if (count === 0) return null;
+    
+    return (
+      <span className="text-label-small bg-surface-200 dark:bg-surface-700 text-on-surface-variant px-2 py-1 rounded-full min-w-[1.5rem] text-center">
+        {count > 99 ? '99+' : count}
+      </span>
+    );
+  };
+  
   return (
     <>
       {/* Overlay para mobile */}
@@ -130,8 +140,7 @@ const Sidebar: React.FC = () => {
     
       <aside
         id="mobile-sidebar"
-        className={`nav-rail bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800
-          fixed md:static left-0 top-0 h-full md:min-h-screen w-80 z-40 
+        className={`nav-rail fixed md:static left-0 top-0 h-full md:min-h-screen w-80 z-40 
           transition-transform duration-300 ease-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           md:translate-x-0 md:block md:flex-shrink-0
@@ -139,16 +148,17 @@ const Sidebar: React.FC = () => {
         `}
       >
         <div className="flex flex-col h-full p-6">
+          {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-500 rounded-2xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center">
                 <ClipboardList className="text-white" size={24} />
               </div>
               <div>
-                <h1 className="text-xl font-medium text-surface-900 dark:text-surface-50">
+                <h1 className="text-title-large text-on-surface">
                   TaskMaster
                 </h1>
-                <p className="text-sm text-surface-600 dark:text-surface-400">
+                <p className="text-body-small text-on-surface-variant">
                   Organize suas tarefas
                 </p>
               </div>
@@ -157,15 +167,14 @@ const Sidebar: React.FC = () => {
             <div className="flex items-center gap-2">
               <button 
                 onClick={toggleTheme} 
-                className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300 transition-colors ripple"
+                className="btn-icon"
                 aria-label="Alternar tema"
               >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
               
-              {/* Botão de fechar só aparece no mobile */}
               <button
-                className="md:hidden p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300 transition-colors ripple"
+                className="md:hidden btn-icon"
                 onClick={toggleSidebar}
                 aria-label="Fechar menu"
               >
@@ -174,6 +183,7 @@ const Sidebar: React.FC = () => {
             </div>
           </div>
           
+          {/* Quick Access */}
           <div className="space-y-2 mb-8">
             <button
               className={`nav-item w-full ${
@@ -182,10 +192,8 @@ const Sidebar: React.FC = () => {
               onClick={() => handleListSelect('all')}
             >
               <Home size={20} />
-              <span className="flex-1 text-left">Todas as Tarefas</span>
-              <span className="text-xs bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 px-2 py-1 rounded-full">
-                {allTasks.filter(task => !task.completed).length}
-              </span>
+              <span className="flex-1 text-left text-body-large">Todas as Tarefas</span>
+              <CountBadge count={allTasks.filter(task => !task.completed).length} />
             </button>
             
             <button
@@ -195,12 +203,8 @@ const Sidebar: React.FC = () => {
               onClick={() => handleListSelect('important')}
             >
               <Star size={20} className="text-amber-500" />
-              <span className="flex-1 text-left">Importantes</span>
-              {importantTasksCount > 0 && (
-                <span className="text-xs bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 px-2 py-1 rounded-full">
-                  {importantTasksCount}
-                </span>
-              )}
+              <span className="flex-1 text-left text-body-large">Importantes</span>
+              <CountBadge count={importantTasksCount} />
             </button>
             
             <button
@@ -210,22 +214,19 @@ const Sidebar: React.FC = () => {
               onClick={() => handleListSelect('planned')}
             >
               <Calendar size={20} className="text-blue-500" />
-              <span className="flex-1 text-left">Planejadas</span>
-              {plannedTasksCount > 0 && (
-                <span className="text-xs bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 px-2 py-1 rounded-full">
-                  {plannedTasksCount}
-                </span>
-              )}
+              <span className="flex-1 text-left text-body-large">Planejadas</span>
+              <CountBadge count={plannedTasksCount} />
             </button>
           </div>
           
-          <div className="mb-6">
+          {/* Custom Lists */}
+          <div className="mb-6 flex-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium text-surface-600 dark:text-surface-400 uppercase tracking-wide">
+              <h2 className="text-label-large text-on-surface-variant uppercase tracking-wide">
                 Minhas Listas
               </h2>
               <button 
-                className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-600 dark:text-surface-400 transition-colors ripple"
+                className="btn-icon"
                 onClick={() => setShowNewListForm(true)}
                 aria-label="Criar nova lista"
               >
@@ -244,18 +245,18 @@ const Sidebar: React.FC = () => {
                 <div key={list.id} className="relative group">
                   {showDeleteConfirm === list.id ? (
                     <div className="card p-4 border border-error-200 dark:border-error-800 animate-scale-in">
-                      <p className="text-sm text-error-700 dark:text-error-400 mb-3">
+                      <p className="text-body-medium text-error-700 dark:text-error-400 mb-3">
                         Deletar esta lista?
                       </p>
                       <div className="flex gap-2">
                         <button
-                          className="btn-text text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 text-sm px-3 py-1"
+                          className="btn-text text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 text-label-medium px-3 py-1"
                           onClick={() => handleDeleteList(list.id)}
                         >
                           Deletar
                         </button>
                         <button
-                          className="btn-text text-surface-600 dark:text-surface-400 text-sm px-3 py-1"
+                          className="btn-text text-on-surface-variant text-label-medium px-3 py-1"
                           onClick={() => setShowDeleteConfirm(null)}
                         >
                           Cancelar
@@ -266,7 +267,7 @@ const Sidebar: React.FC = () => {
                     <div
                       className={`nav-item ${
                         activeListId === list.id ? 'nav-item-active' : ''
-                      } group-hover:bg-surface-200 dark:group-hover:bg-surface-800`}
+                      } group-hover:bg-surface-100 dark:group-hover:bg-surface-800`}
                     >
                       <button
                         className="flex items-center gap-3 flex-1 min-w-0 ripple"
@@ -276,24 +277,21 @@ const Sidebar: React.FC = () => {
                           className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: list.color || '#6750a4' }}
                         />
-                        <span className="truncate">{list.name}</span>
+                        <span className="truncate text-body-large">{list.name}</span>
                       </button>
                       
                       <div className="flex items-center gap-2">
-                        {getIncompleteTaskCount(list.id) > 0 && (
-                          <span className="text-xs bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 px-2 py-1 rounded-full">
-                            {getIncompleteTaskCount(list.id)}
-                          </span>
-                        )}
+                        <CountBadge count={getIncompleteTaskCount(list.id)} />
                         
-                        <button
-                          className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-surface-300 dark:hover:bg-surface-700 text-surface-500 dark:text-surface-400 hover:text-error-500 dark:hover:text-error-400 transition-all ripple"
-                          onClick={() => setShowDeleteConfirm(list.id)}
-                          aria-label={`Deletar lista ${list.name}`}
-                          disabled={list.id === 'default'}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {list.id !== 'default' && (
+                          <button
+                            className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-surface-300 dark:hover:bg-surface-700 text-on-surface-variant hover:text-error-500 dark:hover:text-error-400 transition-all ripple"
+                            onClick={() => setShowDeleteConfirm(list.id)}
+                            aria-label={`Deletar lista ${list.name}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -302,12 +300,11 @@ const Sidebar: React.FC = () => {
             </div>
           </div>
           
+          {/* Settings */}
           <div className="mt-auto">
-            <button
-              className="nav-item w-full ripple"
-            >
+            <button className="nav-item w-full ripple">
               <Settings size={20} />
-              <span>Configurações</span>
+              <span className="text-body-large">Configurações</span>
             </button>
           </div>
         </div>
