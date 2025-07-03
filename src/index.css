@@ -174,7 +174,8 @@
   
   .ripple::before {
     content: '';
-    @apply absolute inset-0 bg-current opacity-0 rounded-inherit pointer-events-none transition-opacity duration-200;
+    @apply absolute inset-0 bg-current opacity-0 pointer-events-none transition-opacity duration-200;
+    border-radius: inherit;
   }
   
   .ripple:active::before {
@@ -298,6 +299,7 @@
   }
   100% {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
