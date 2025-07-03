@@ -1,13 +1,19 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 import useTasks from '../hooks/useTasks';
 import useTaskLists from '../hooks/useTaskLists';
-import { Task, TaskList, TaskFilter } from '../types';
+import useNotes from '../hooks/useNotes';
+import { Task, TaskList, Note, TaskFilter, ViewMode } from '../types';
 
 type AppContextType = {
+  // View mode
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  
   // Task operations
   tasks: Task[];
   allTasks: Task[];
-  createTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Task>;
+  createTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<Task>;
   updateTask: (taskId: string, task: Partial<Task>) => Promise<Task>;
   deleteTask: (taskId: string) => Promise<boolean>;
   toggleTaskCompletion: (taskId: string) => Promise<Task | undefined>;
@@ -15,9 +21,16 @@ type AppContextType = {
   
   // List operations
   lists: TaskList[];
-  createList: (list: Omit<TaskList, 'id' | 'createdAt' | 'updatedAt'>) => Promise<TaskList>;
+  createList: (list: Omit<TaskList, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<TaskList>;
   updateList: (listId: string, list: Partial<TaskList>) => Promise<TaskList>;
-  deleteList: (listId: string) => Promise<boolean>;
+  deleteList: (listId: string, moveTasksToListId?: string) => Promise<boolean>;
+  
+  // Note operations
+  notes: Note[];
+  createNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<Note>;
+  updateNote: (noteId: string, note: Partial<Note>) => Promise<Note>;
+  deleteNote: (noteId: string) => Promise<boolean>;
+  importNoteFromMarkdown: (content: string, title: string) => Promise<Note>;
   
   // Filter operations
   filter: TaskFilter;
@@ -37,12 +50,18 @@ type AppContextType = {
   // Loading states
   tasksLoading: boolean;
   listsLoading: boolean;
+  notesLoading: boolean;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Task and list hooks
+  const { user, isAuthenticated } = useAuth();
+  const [viewMode, setViewMode] = useState<ViewMode>('tasks');
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isAddingTask, setIsAddingTask] = useState(false);
+
+  // Only initialize hooks if user is authenticated
   const {
     tasks,
     allTasks,
@@ -54,8 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteTask,
     toggleTaskCompletion,
     toggleTaskImportance,
-    fetchTasks, // Make sure this is exported from your useTasks hook
-  } = useTasks();
+  } = useTasks(user?.uid);
   
   const {
     lists,
@@ -64,35 +82,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveListId,
     createList,
     updateList,
-    deleteList: deleteListFromHook,
-  } = useTaskLists();
-  
-  // UI state
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
-  const [isAddingTask, setIsAddingTask] = useState(false);
+    deleteList,
+  } = useTaskLists(user?.uid);
+
+  const {
+    notes,
+    loading: notesLoading,
+    createNote,
+    updateNote,
+    deleteNote,
+    importNoteFromMarkdown,
+  } = useNotes(user?.uid);
   
   // Helpers
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
   const activeList = lists.find(list => list.id === activeListId);
   
-  // Enhanced deleteList function that also refreshes tasks
-  const deleteList = async (listId: string) => {
-    try {
-      const success = await deleteListFromHook(listId);
-      
-      if (success) {
-        // Refresh tasks after list deletion
-        fetchTasks();
-      }
-      
-      return success;
-    } catch (error) {
-      console.error('Error deleting list:', error);
-      throw error;
-    }
-  };
-  
   const value = {
+    // View mode
+    viewMode,
+    setViewMode,
+    
     // Task operations
     tasks,
     allTasks,
@@ -107,6 +117,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     createList,
     updateList,
     deleteList,
+    
+    // Note operations
+    notes,
+    createNote,
+    updateNote,
+    deleteNote,
+    importNoteFromMarkdown,
     
     // Filter operations
     filter,
@@ -126,6 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Loading states
     tasksLoading,
     listsLoading,
+    notesLoading,
   };
   
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -9,9 +9,12 @@ import {
   Sun,
   X,
   Settings,
-  Trash2
+  Trash2,
+  FileText,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/AuthContext';
 import NewListForm from '../lists/NewListForm';
 
 const Sidebar: React.FC = () => {
@@ -22,8 +25,12 @@ const Sidebar: React.FC = () => {
     allTasks,
     sidebarOpen,
     toggleSidebar,
-    deleteList
+    deleteList,
+    viewMode,
+    setViewMode
   } = useApp();
+  
+  const { user, signOut } = useAuth();
   
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -45,6 +52,14 @@ const Sidebar: React.FC = () => {
   
   const handleListSelect = (listId: string) => {
     setActiveListId(listId);
+    setViewMode('tasks');
+    if (window.innerWidth < 768) {
+      toggleSidebar();
+    }
+  };
+  
+  const handleViewChange = (mode: 'tasks' | 'notes' | 'settings') => {
+    setViewMode(mode);
     if (window.innerWidth < 768) {
       toggleSidebar();
     }
@@ -60,13 +75,17 @@ const Sidebar: React.FC = () => {
   };
   
   const handleDeleteList = async (listId: string) => {
-    if (listId === 'default') {
-      alert('A lista padrão não pode ser deletada.');
-      return;
-    }
-    
     try {
-      await deleteList(listId);
+      // Get the first available list to move tasks to
+      const targetList = lists.find(l => l.id !== listId);
+      
+      if (targetList) {
+        await deleteList(listId, targetList.id);
+      } else {
+        // If no other lists, just delete (tasks will be deleted too)
+        await deleteList(listId);
+      }
+      
       setShowDeleteConfirm(null);
       
       if (activeListId === listId) {
@@ -75,6 +94,12 @@ const Sidebar: React.FC = () => {
     } catch (error) {
       console.error('Falha ao deletar lista:', error);
       alert('Falha ao deletar a lista. Tente novamente.');
+    }
+  };
+  
+  const handleSignOut = async () => {
+    if (window.confirm('Tem certeza que deseja sair?')) {
+      await signOut();
     }
   };
   
@@ -159,7 +184,7 @@ const Sidebar: React.FC = () => {
                   TaskMaster
                 </h1>
                 <p className="text-body-small text-on-surface-variant">
-                  Organize suas tarefas
+                  {user?.displayName || user?.email?.split('@')[0] || 'Usuário'}
                 </p>
               </div>
             </div>
@@ -183,11 +208,11 @@ const Sidebar: React.FC = () => {
             </div>
           </div>
           
-          {/* Quick Access */}
+          {/* Navigation */}
           <div className="space-y-2 mb-8">
             <button
               className={`nav-item w-full ${
-                activeListId === 'all' ? 'nav-item-active' : ''
+                viewMode === 'tasks' && activeListId === 'all' ? 'nav-item-active' : ''
               } ripple`}
               onClick={() => handleListSelect('all')}
             >
@@ -198,7 +223,7 @@ const Sidebar: React.FC = () => {
             
             <button
               className={`nav-item w-full ${
-                activeListId === 'important' ? 'nav-item-active' : ''
+                viewMode === 'tasks' && activeListId === 'important' ? 'nav-item-active' : ''
               } ripple`}
               onClick={() => handleListSelect('important')}
             >
@@ -209,7 +234,7 @@ const Sidebar: React.FC = () => {
             
             <button
               className={`nav-item w-full ${
-                activeListId === 'planned' ? 'nav-item-active' : ''
+                viewMode === 'tasks' && activeListId === 'planned' ? 'nav-item-active' : ''
               } ripple`}
               onClick={() => handleListSelect('planned')}
             >
@@ -217,73 +242,83 @@ const Sidebar: React.FC = () => {
               <span className="flex-1 text-left text-body-large">Planejadas</span>
               <CountBadge count={plannedTasksCount} />
             </button>
+            
+            <button
+              className={`nav-item w-full ${
+                viewMode === 'notes' ? 'nav-item-active' : ''
+              } ripple`}
+              onClick={() => handleViewChange('notes')}
+            >
+              <FileText size={20} className="text-green-500" />
+              <span className="flex-1 text-left text-body-large">Notas</span>
+            </button>
           </div>
           
           {/* Custom Lists */}
-          <div className="mb-6 flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-label-large text-on-surface-variant uppercase tracking-wide">
-                Minhas Listas
-              </h2>
-              <button 
-                className="btn-icon"
-                onClick={() => setShowNewListForm(true)}
-                aria-label="Criar nova lista"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-            
-            {showNewListForm && (
-              <div className="mb-4 animate-slide-down">
-                <NewListForm onCancel={() => setShowNewListForm(false)} />
+          {viewMode === 'tasks' && (
+            <div className="mb-6 flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-label-large text-on-surface-variant uppercase tracking-wide">
+                  Minhas Listas
+                </h2>
+                <button 
+                  className="btn-icon"
+                  onClick={() => setShowNewListForm(true)}
+                  aria-label="Criar nova lista"
+                >
+                  <Plus size={16} />
+                </button>
               </div>
-            )}
-            
-            <div className="space-y-1">
-              {lists.map(list => (
-                <div key={list.id} className="relative group">
-                  {showDeleteConfirm === list.id ? (
-                    <div className="card p-4 border border-error-200 dark:border-error-800 animate-scale-in">
-                      <p className="text-body-medium text-error-700 dark:text-error-400 mb-3">
-                        Deletar esta lista?
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          className="btn-text text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 text-label-medium px-3 py-1"
-                          onClick={() => handleDeleteList(list.id)}
-                        >
-                          Deletar
-                        </button>
-                        <button
-                          className="btn-text text-on-surface-variant text-label-medium px-3 py-1"
-                          onClick={() => setShowDeleteConfirm(null)}
-                        >
-                          Cancelar
-                        </button>
+              
+              {showNewListForm && (
+                <div className="mb-4 animate-slide-down">
+                  <NewListForm onCancel={() => setShowNewListForm(false)} />
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                {lists.map(list => (
+                  <div key={list.id} className="relative group">
+                    {showDeleteConfirm === list.id ? (
+                      <div className="card p-4 border border-error-200 dark:border-error-800 animate-scale-in">
+                        <p className="text-body-medium text-error-700 dark:text-error-400 mb-3">
+                          Deletar esta lista?
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            className="btn-text text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 text-label-medium px-3 py-1"
+                            onClick={() => handleDeleteList(list.id)}
+                          >
+                            Deletar
+                          </button>
+                          <button
+                            className="btn-text text-on-surface-variant text-label-medium px-3 py-1"
+                            onClick={() => setShowDeleteConfirm(null)}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={`nav-item ${
-                        activeListId === list.id ? 'nav-item-active' : ''
-                      } group-hover:bg-surface-100 dark:group-hover:bg-surface-800`}
-                    >
-                      <button
-                        className="flex items-center gap-3 flex-1 min-w-0 ripple"
-                        onClick={() => handleListSelect(list.id)}
+                    ) : (
+                      <div
+                        className={`nav-item ${
+                          activeListId === list.id ? 'nav-item-active' : ''
+                        } group-hover:bg-surface-100 dark:group-hover:bg-surface-800`}
                       >
-                        <div 
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: list.color || '#6750a4' }}
-                        />
-                        <span className="truncate text-body-large">{list.name}</span>
-                      </button>
-                      
-                      <div className="flex items-center gap-2">
-                        <CountBadge count={getIncompleteTaskCount(list.id)} />
+                        <button
+                          className="flex items-center gap-3 flex-1 min-w-0 ripple"
+                          onClick={() => handleListSelect(list.id)}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: list.color || '#6750a4' }}
+                          />
+                          <span className="truncate text-body-large">{list.name}</span>
+                        </button>
                         
-                        {list.id !== 'default' && (
+                        <div className="flex items-center gap-2">
+                          <CountBadge count={getIncompleteTaskCount(list.id)} />
+                          
                           <button
                             className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-surface-300 dark:hover:bg-surface-700 text-on-surface-variant hover:text-error-500 dark:hover:text-error-400 transition-all ripple"
                             onClick={() => setShowDeleteConfirm(list.id)}
@@ -291,20 +326,33 @@ const Sidebar: React.FC = () => {
                           >
                             <Trash2 size={14} />
                           </button>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           
-          {/* Settings */}
-          <div className="mt-auto">
-            <button className="nav-item w-full ripple">
+          {/* Bottom Navigation */}
+          <div className="mt-auto space-y-2">
+            <button 
+              className={`nav-item w-full ripple ${
+                viewMode === 'settings' ? 'nav-item-active' : ''
+              }`}
+              onClick={() => handleViewChange('settings')}
+            >
               <Settings size={20} />
               <span className="text-body-large">Configurações</span>
+            </button>
+            
+            <button 
+              className="nav-item w-full ripple text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20"
+              onClick={handleSignOut}
+            >
+              <LogOut size={20} />
+              <span className="text-body-large">Sair</span>
             </button>
           </div>
         </div>

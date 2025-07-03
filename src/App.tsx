@@ -1,24 +1,37 @@
-import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header';
-import TaskList from './components/tasks/TaskList';
+import React from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
+import AuthPage from './components/auth/AuthPage';
+import MainApp from './components/MainApp';
+import LoadingSpinner from './components/ui/LoadingSpinner';
+
+function AppContent() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen surface flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  return (
+    <AppProvider>
+      <MainApp />
+    </AppProvider>
+  );
+}
 
 function App() {
   return (
-    <AppProvider>
-      <div className="min-h-screen surface text-on-surface">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          
-          <div className="flex-1 min-w-0 flex flex-col">
-            <Header />
-            <main className="flex-1 overflow-hidden">
-              <TaskList />
-            </main>
-          </div>
-        </div>
-      </div>
-    </AppProvider>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

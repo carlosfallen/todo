@@ -1,139 +1,89 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TaskList } from '../types';
-import { listStorage } from '../services/localStorage';
-import { taskListAPI } from '../services/taskAPI';
+import { enhancedTaskListAPI } from '../services/enhancedTaskAPI';
  
-export default function useTaskLists() {
+export default function useTaskLists(userId?: string) {
   const [lists, setLists] = useState<TaskList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeListId, setActiveListId] = useState<string>('default');
+  const [activeListId, setActiveListId] = useState<string>('all');
 
-  // Fetch lists from API or localStorage if API fails
+  // Fetch lists from API
   const fetchLists = useCallback(async () => {
+    if (!userId) {
+      setLists([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     
     try {
-      const allLists = await taskListAPI.getAllTaskLists();
-      
-      // If no lists returned, create a default one
-      if (allLists.length === 0) {
-        try {
-          const defaultList = await taskListAPI.createTaskList({
-            name: 'My Tasks',
-            color: '#3B82F6'
-          });
-          setLists([defaultList]);
-        } catch (err) {
-          console.error('Failed to create default list', err);
-          // Fall back to localStorage
-          const defaultLists = listStorage.getAllLists();
-          setLists(defaultLists);
-        }
-      } else {
-        setLists(allLists);
-      }
+      const allLists = await enhancedTaskListAPI.getAllTaskLists(userId);
+      setLists(allLists);
     } catch (err) {
-      console.error('Failed to fetch lists from API, falling back to localStorage', err);
-      try {
-        // Fall back to localStorage
-        const localLists = listStorage.getAllLists();
-        setLists(localLists);
-      } catch (localErr) {
-        setError('Failed to load task lists');
-        console.error('Failed to load lists from localStorage', localErr);
-      }
+      console.error('Failed to fetch lists:', err);
+      setError('Falha ao carregar listas');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchLists();
   }, [fetchLists]);
 
   // Create a new list
-  const createList = useCallback(async (list: Omit<TaskList, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createList = useCallback(async (list: Omit<TaskList, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+    if (!userId) throw new Error('Usuário não autenticado');
+
     try {
-      const newList = await taskListAPI.createTaskList(list);
+      const newList = await enhancedTaskListAPI.createTaskList(list, userId);
       setLists(prev => [...prev, newList]);
       return newList;
     } catch (err) {
-      console.error('Failed to create list with API, falling back to localStorage', err);
-      try {
-        // Fall back to localStorage
-        const localList = listStorage.createList(list);
-        setLists(prev => [...prev, localList]);
-        return localList;
-      } catch (localErr) {
-        setError('Failed to create list');
-        console.error('Failed to create list in localStorage', localErr);
-        throw localErr;
-      }
+      console.error('Failed to create list:', err);
+      setError('Falha ao criar lista');
+      throw err;
     }
-  }, []);
+  }, [userId]);
 
   // Update a list
   const updateList = useCallback(async (listId: string, updatedList: Partial<TaskList>) => {
+    if (!userId) throw new Error('Usuário não autenticado');
+
     try {
-      const updated = await taskListAPI.updateTaskList(listId, updatedList);
+      const updated = await enhancedTaskListAPI.updateTaskList(listId, updatedList, userId);
       setLists(prev => prev.map(list => list.id === listId ? updated : list));
       return updated;
     } catch (err) {
-      console.error('Failed to update list with API, falling back to localStorage', err);
-      try {
-        // Fall back to localStorage
-        const localUpdated = listStorage.updateList(listId, updatedList);
-        setLists(prev => prev.map(list => list.id === listId ? localUpdated : list));
-        return localUpdated;
-      } catch (localErr) {
-        setError('Failed to update list');
-        console.error('Failed to update list in localStorage', localErr);
-        throw localErr;
-      }
+      console.error('Failed to update list:', err);
+      setError('Falha ao atualizar lista');
+      throw err;
     }
-  }, []);
+  }, [userId]);
 
   // Delete a list
-  const deleteList = useCallback(async (listId: string) => {
-    // Prevent deleting the default list
-    if (listId === 'default') {
-      setError("Cannot delete the default list");
-      return false;
-    }
-    
+  const deleteList = useCallback(async (listId: string, moveTasksToListId?: string) => {
+    if (!userId) throw new Error('Usuário não autenticado');
+
     try {
-      await taskListAPI.deleteTaskList(listId);
+      await enhancedTaskListAPI.deleteTaskList(listId, userId, moveTasksToListId);
       setLists(prev => prev.filter(list => list.id !== listId));
       
-      // If we deleted the active list, set the active list to the default
+      // If we deleted the active list, set the active list to 'all'
       if (activeListId === listId) {
-        setActiveListId('default');
+        setActiveListId('all');
       }
       
       return true;
     } catch (err) {
-      console.error('Failed to delete list with API, falling back to localStorage', err);
-      try {
-        // Fall back to localStorage
-        const success = listStorage.deleteList(listId);
-        if (success) {
-          setLists(prev => prev.filter(list => list.id !== listId));
-          
-          // If we deleted the active list, set the active list to the default
-          if (activeListId === listId) {
-            setActiveListId('default');
-          }
-        }
-        return success;
-      } catch (localErr) {
-        setError('Failed to delete list');
-        console.error('Failed to delete list in localStorage', localErr);
-        throw localErr;
-      }
+      console.error('Failed to delete list:', err);
+      setError('Falha ao deletar lista');
+      throw err;
     }
-  }, [activeListId]);
+  }, [userId, activeListId]);
 
   return {
     lists,
