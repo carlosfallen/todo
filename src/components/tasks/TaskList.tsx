@@ -16,6 +16,10 @@ const TaskList: React.FC = () => {
     activeList
   } = useApp();
   
+  const handleTaskSaved = () => {
+    setIsAddingTask(false);
+  };
+
   if (tasksLoading) {
     return (
       <div className="flex justify-center py-10">
@@ -85,12 +89,17 @@ const TaskList: React.FC = () => {
   
   return (
     <div className="p-4 bg-neutral-00 dark:bg-neutral-800 min-h-full">
-      {isAddingTask && (
+      {isAddingTask ? (
         <div className="mb-4">
-          <TaskForm onClose={() => setIsAddingTask(false)} />
+          <div className={isAddingTask ? "" : "opacity-0"}>
+            <TaskForm
+              onClose={() => setIsAddingTask(false)}
+              onTaskSaved={handleTaskSaved}
+            />
+          </div>
         </div>
-      )}
-      
+      ) : null}
+
       {filteredTasks.length === 0 ? (
         <EmptyState 
           title={filter.search ? "No matching tasks" : "No tasks yet"}

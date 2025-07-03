@@ -46,6 +46,16 @@
     @apply bg-surface-50 dark:bg-surface-900 rounded-2xl shadow-elevation-2;
   }
   
+  /* Dropdown/Modal Overlay */
+  .dropdown-menu {
+    @apply absolute z-[100] bg-white dark:bg-surface-900 rounded-xl shadow-lg border border-outline-variant/20 min-w-48;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .dark .dropdown-menu {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  }
+  
   /* Input Fields */
   .input-field {
     @apply bg-surface-100 dark:bg-surface-800 border border-outline-variant rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
@@ -119,4 +129,61 @@
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/* Animations */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.15s ease-out;
+}
+
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Z-Index layers - importante para controlar a ordem de empilhamento */
+.z-dropdown {
+  z-index: 100;
+}
+
+.z-modal {
+  z-index: 200;
+}
+
+.z-tooltip {
+  z-index: 300;
 }

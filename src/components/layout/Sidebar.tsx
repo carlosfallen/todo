@@ -109,7 +109,10 @@ const Sidebar: React.FC = () => {
       }
     };
     
-    document.addEventListener('mousedown', handleClickOutside);
+    if (window.innerWidth < 768) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -117,6 +120,7 @@ const Sidebar: React.FC = () => {
   
   return (
     <>
+      {/* Overlay para mobile */}
       {sidebarOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black/50 z-30 transition-opacity animate-fade-in"
@@ -126,9 +130,13 @@ const Sidebar: React.FC = () => {
     
       <aside
         id="mobile-sidebar"
-        className={`nav-rail fixed left-0 top-0 h-full w-80 z-40 transition-all duration-300 ease-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 overflow-y-auto`}
+        className={`nav-rail bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800
+          fixed md:static left-0 top-0 h-full md:min-h-screen w-80 z-40 
+          transition-transform duration-300 ease-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          md:translate-x-0 md:block md:flex-shrink-0
+          overflow-y-auto
+        `}
       >
         <div className="flex flex-col h-full p-6">
           <div className="flex items-center justify-between mb-8">
@@ -155,6 +163,7 @@ const Sidebar: React.FC = () => {
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
               
+              {/* Botão de fechar só aparece no mobile */}
               <button
                 className="md:hidden p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-300 transition-colors ripple"
                 onClick={toggleSidebar}

@@ -90,11 +90,11 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   
   return (
     <div 
-      className={`card p-4 mb-3 transition-all duration-200 hover:shadow-elevation-2 ${
+      className={`card p-4 mb-3 transition-all duration-200 hover:shadow-elevation-2 rounded-xl ${
         task.completed 
           ? 'opacity-60' 
           : 'hover:-translate-y-0.5'
-      } ripple animate-fade-in`}
+      } ripple animate-fade-in relative ${showOptions ? 'z-50' : 'z-0'} ${showOptions ? 'overflow-visible' : 'overflow-hidden'}`}
     >
       <div className="flex items-start gap-4">
         <button
@@ -173,7 +173,10 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 {showOptions && (
                   <div 
                     ref={optionsRef}
-                    className="absolute right-0 mt-1 card-elevated z-10 min-w-48 animate-scale-in"
+                    className="absolute right-0 top-full mt-1 z-[100] bg-white dark:bg-surface-900 rounded-xl shadow-lg border border-outline-variant/20 min-w-48 animate-scale-in"
+                    style={{ 
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' 
+                    }}
                   >
                     <div className="py-2">
                       <button

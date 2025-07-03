@@ -64,7 +64,7 @@ const Header: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button 
-            className="md:hidden p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple"
+            className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple md:hidden"
             onClick={toggleSidebar}
             aria-label="Abrir menu"
           >
@@ -73,14 +73,14 @@ const Header: React.FC = () => {
           
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-medium text-surface-900 dark:text-surface-50 truncate">
-              {activeList ? activeList.name : 'Todas as Tarefas'}
+              {activeList ? activeList.name : 'Todas'}
             </h1>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           <button
-            className="md:hidden p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple"
+            className="p-2 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors ripple md:hidden"
             onClick={() => setShowSearchBar(!showSearchBar)}
             aria-label="Buscar"
           >
