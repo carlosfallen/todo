@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import useTasks from '../hooks/useTasks';
 import useTaskLists from '../hooks/useTaskLists';
-import useNotes from '../hooks/useNotes';
+import useOptimisticNotes from '../hooks/useOptimisticNotes';
 import { Task, TaskList, Note, TaskFilter, ViewMode } from '../types';
 
 type AppContextType = {
@@ -92,7 +92,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateNote,
     deleteNote,
     importNoteFromMarkdown,
-  } = useNotes(user?.uid);
+  } = useOptimisticNotes(user?.uid);
   
   // Helpers
   const toggleSidebar = () => setSidebarOpen(prev => !prev);

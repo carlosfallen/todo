@@ -5,45 +5,45 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Material Design 3 Color System
+        // VS Code Dark Theme Colors
         primary: {
-          50: '#f3f0ff',
-          100: '#e9e2ff',
-          200: '#d6ccff',
-          300: '#b8a9ff',
-          400: '#9479ff',
-          500: '#7c3aed',
-          600: '#6d28d9',
-          700: '#5b21b6',
-          800: '#4c1d95',
-          900: '#3730a3',
-          950: '#1e1b4b',
+          50: '#e6f7ff',
+          100: '#bae7ff',
+          200: '#91d5ff',
+          300: '#69c0ff',
+          400: '#40a9ff',
+          500: '#1890ff',
+          600: '#007acc', // VS Code primary
+          700: '#0050b3',
+          800: '#003a8c',
+          900: '#002766',
+          950: '#001529',
         },
         secondary: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0db9d7', // VS Code accent
+          600: '#0891b2',
+          700: '#0e7490',
+          800: '#155e75',
+          900: '#164e63',
+          950: '#0c4a6e',
         },
         surface: {
-          50: '#fefefe',
-          100: '#fdfdfd',
-          200: '#f8f9fa',
-          300: '#f1f3f4',
-          400: '#e8eaed',
-          500: '#dadce0',
-          600: '#bdc1c6',
-          700: '#9aa0a6',
-          800: '#5f6368',
-          900: '#202124',
-          950: '#0d1117',
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e5e5',
+          300: '#d4d4d4', // VS Code text
+          400: '#a3a3a3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#3c3c3c', // VS Code accent
+          900: '#252526', // VS Code secondary bg
+          950: '#1e1e1e', // VS Code main bg
         },
         error: {
           50: '#fef2f2',
@@ -98,6 +98,16 @@ export default {
           '"Segoe UI Emoji"',
           '"Segoe UI Symbol"',
         ],
+        mono: [
+          '"Fira Code"',
+          '"Cascadia Code"',
+          '"JetBrains Mono"',
+          'Consolas',
+          '"Liberation Mono"',
+          'Menlo',
+          'Monaco',
+          'monospace',
+        ],
       },
       fontSize: {
         'display-large': ['3.5rem', { lineHeight: '4rem', letterSpacing: '-0.025em', fontWeight: '400' }],
@@ -135,6 +145,9 @@ export default {
         'slide-down': 'slideDown 0.3s ease-out',
         'scale-in': 'scaleIn 0.2s ease-out',
         'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce-subtle': 'bounceSubtle 0.6s ease-out',
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'slide-out-left': 'slideOutLeft 0.3s ease-in',
       },
       keyframes: {
         fadeIn: {
@@ -157,10 +170,27 @@ export default {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' },
         },
+        bounceSubtle: {
+          '0%, 20%, 53%, 80%, 100%': { transform: 'translate3d(0,0,0)' },
+          '40%, 43%': { transform: 'translate3d(0, -8px, 0)' },
+          '70%': { transform: 'translate3d(0, -4px, 0)' },
+          '90%': { transform: 'translate3d(0, -2px, 0)' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideOutLeft: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(-100%)', opacity: '0' },
+        },
       },
       spacing: {
         '18': '4.5rem',
         '88': '22rem',
+      },
+      backdropBlur: {
+        xs: '2px',
       },
     },
   },

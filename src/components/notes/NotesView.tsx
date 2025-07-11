@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
-import { Plus, Search, FileText, Edit, Trash2, Download, Upload, X, ArrowLeft } from 'lucide-react';
+import { Plus, Search, FileText, Edit, Trash2, Download, Upload, X, ArrowLeft, Grid, List } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { useToast } from '../../hooks/useToast';
 import NoteEditor from './NoteEditor';
 import NoteViewer from './NoteViewer';
 import { Note } from '../../types';
+import useOptimisticNotes from '../../hooks/useOptimisticNotes';
+import { useAuth } from '../../contexts/AuthContext';
+import ToastContainer from '../ui/ToastContainer';
  
 const NotesView: React.FC = () => {
-  const { notes, createNote, deleteNote, importNoteFromMarkdown, notesLoading } = useApp();
+  const { user } = useAuth();
+  const { notes, createNote, deleteNote, importNoteFromMarkdown, loading: notesLoading } = useOptimisticNotes(user?.uid);
+  const { toasts, showToast, removeToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
   const [showNotesList, setShowNotesList] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -20,15 +27,28 @@ const NotesView: React.FC = () => {
   );
 
   const handleCreateNote = async () => {
-    const newNote = await createNote({
-      title: 'Nova Nota',
-      content: '# Nova Nota\n\nComece a escrever aqui...',
-      tags: []
-    });
-    setSelectedNote(newNote);
-    setIsEditing(true);
-    if (window.innerWidth < 768) {
-      setShowNotesList(false);
+    try {
+      const newNote = await createNote({
+        title: 'Nova Nota',
+        content: '# Nova Nota\n\nComece a escrever aqui...',
+        tags: []
+      });
+      setSelectedNote(newNote);
+      setIsEditing(true);
+      if (window.innerWidth < 768) {
+        setShowNotesList(false);
+      }
+      showToast({
+        type: 'success',
+        title: 'Nota criada',
+        message: 'Nova nota criada com sucesso'
+      });
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Falha ao criar nota'
+      });
     }
   };
 
@@ -48,13 +68,26 @@ const NotesView: React.FC = () => {
 
   const handleDeleteNote = async (noteId: string) => {
     if (window.confirm('Tem certeza que deseja deletar esta nota?')) {
-      await deleteNote(noteId);
-      if (selectedNote?.id === noteId) {
-        setSelectedNote(null);
-        setIsEditing(false);
-        if (window.innerWidth < 768) {
-          setShowNotesList(true);
+      try {
+        await deleteNote(noteId);
+        if (selectedNote?.id === noteId) {
+          setSelectedNote(null);
+          setIsEditing(false);
+          if (window.innerWidth < 768) {
+            setShowNotesList(true);
+          }
         }
+        showToast({
+          type: 'success',
+          title: 'Nota deletada',
+          message: 'Nota deletada com sucesso'
+        });
+      } catch (error) {
+        showToast({
+          type: 'error',
+          title: 'Erro',
+          message: 'Falha ao deletar nota'
+        });
       }
     }
   };
@@ -69,6 +102,12 @@ const NotesView: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    showToast({
+      type: 'success',
+      title: 'Nota exportada',
+      message: 'Arquivo markdown baixado com sucesso'
+    });
   };
 
   const MarkdownImporter: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -101,8 +140,17 @@ const NotesView: React.FC = () => {
           setShowNotesList(false);
         }
         onClose();
+        showToast({
+          type: 'success',
+          title: 'Nota importada',
+          message: 'Arquivo markdown importado com sucesso'
+        });
       } catch (error) {
-        console.error('Erro ao importar:', error);
+        showToast({
+          type: 'error',
+          title: 'Erro',
+          message: 'Falha ao importar arquivo'
+        });
       } finally {
         setIsImporting(false);
       }
@@ -111,9 +159,9 @@ const NotesView: React.FC = () => {
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="card-elevated w-full max-w-2xl max-h-[90vh] overflow-hidden">
-          <div className="p-6 border-b divider">
+          <div className="p-6 border-b border-surface-800">
             <div className="flex justify-between items-center">
-              <h2 className="text-title-large text-on-surface">Importar Markdown</h2>
+              <h2 className="text-title-large text-surface-300">Importar Markdown</h2>
               <button onClick={onClose} className="btn-icon">
                 <X size={20} />
               </button>
@@ -123,7 +171,7 @@ const NotesView: React.FC = () => {
           <div className="p-6 overflow-y-auto">
             <div className="space-y-6">
               <div>
-                <label className="block text-label-large text-on-surface mb-2">
+                <label className="block text-label-large text-surface-300 mb-2">
                   Arquivo Markdown
                 </label>
                 <input
@@ -135,7 +183,7 @@ const NotesView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-label-large text-on-surface mb-2">
+                <label className="block text-label-large text-surface-300 mb-2">
                   Título da Nota
                 </label>
                 <input
@@ -148,7 +196,7 @@ const NotesView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-label-large text-on-surface mb-2">
+                <label className="block text-label-large text-surface-300 mb-2">
                   Conteúdo
                 </label>
                 <textarea
@@ -161,7 +209,7 @@ const NotesView: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-6 bg-surface-container border-t divider flex justify-end gap-3">
+          <div className="p-6 surface-container border-t border-surface-800 flex justify-end gap-3">
             <button onClick={onClose} className="btn-outlined">
               <span className="text-label-large">Cancelar</span>
             </button>
@@ -188,27 +236,50 @@ const NotesView: React.FC = () => {
   if (notesLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="w-8 h-8 border-4 border-surface-200 dark:border-surface-700 rounded-full animate-spin border-t-primary-600"></div>
+        <div className="w-8 h-8 border-4 border-surface-700 rounded-full animate-spin border-t-primary-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full relative bg-surface">
+    <div className="flex h-full relative surface">
       {/* Sidebar de notas - Responsivo */}
       <div className={`
         ${showNotesList ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0 md:static
         fixed md:relative inset-y-0 left-0 z-30
-        w-full md:w-80 
+        w-full md:w-96 lg:w-80 xl:w-96
         transition-transform duration-300 ease-in-out
-        border-r divider surface-container flex flex-col
-        md:rounded-3xl
+        border-r border-surface-800 surface-container flex flex-col
       `}>
-        <div className="p-4 border-b divider">
+        <div className="p-4 md:p-6 border-b border-surface-800">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-title-large text-on-surface">Notas</h2>
+            <h2 className="text-title-large text-surface-300">Notas</h2>
             <div className="flex gap-2">
+              <div className="hidden md:flex gap-1 bg-surface-800 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' 
+                      ? 'bg-primary-600 text-white' 
+                      : 'text-surface-400 hover:text-surface-300'
+                  }`}
+                  title="Visualização em grade"
+                >
+                  <Grid size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' 
+                      ? 'bg-primary-600 text-white' 
+                      : 'text-surface-400 hover:text-surface-300'
+                  }`}
+                  title="Visualização em lista"
+                >
+                  <List size={16} />
+                </button>
+              </div>
               <button
                 onClick={() => setShowImporter(true)}
                 className="btn-icon"
@@ -227,7 +298,7 @@ const NotesView: React.FC = () => {
           </div>
 
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant" />
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-500" />
             <input
               type="text"
               placeholder="Buscar notas..."
@@ -241,77 +312,159 @@ const NotesView: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           {filteredNotes.length === 0 ? (
             <div className="p-6 text-center">
-              <FileText size={48} className="mx-auto mb-4 text-on-surface-variant" />
-              <p className="text-body-large text-on-surface-variant mb-2">
+              <FileText size={48} className="mx-auto mb-4 text-surface-500" />
+              <p className="text-body-large text-surface-400 mb-2">
                 {searchTerm ? 'Nenhuma nota encontrada' : 'Nenhuma nota ainda'}
               </p>
-              <p className="text-body-medium text-on-surface-variant">
+              <p className="text-body-medium text-surface-500">
                 {searchTerm ? 'Tente ajustar sua busca' : 'Crie sua primeira nota'}
               </p>
             </div>
           ) : (
-            <div className="p-2">
-              {filteredNotes.map((note) => (
-                <div
-                  key={note.id}
-                  className={`p-3 rounded-xl cursor-pointer transition-all duration-200 mb-2 group ${
-                    selectedNote?.id === note.id
-                      ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                      : 'hover:bg-surface-100 dark:hover:bg-surface-800'
-                  }`}
-                  onClick={() => handleNoteSelect(note)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-body-large font-medium truncate mb-1">
-                        {note.title}
-                      </h3>
-                      <p className="text-body-small text-on-surface-variant line-clamp-2 mb-2">
-                        {note.content.replace(/[#*`]/g, '').substring(0, 100)}...
+            <div className={`p-2 ${viewMode === 'grid' ? 'hidden md:block' : ''}`}>
+              {viewMode === 'grid' ? (
+                // Grid view for desktop
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                  {filteredNotes.map((note) => (
+                    <div
+                      key={note.id}
+                      className={`card-interactive p-4 cursor-pointer transition-all duration-200 group ${
+                        selectedNote?.id === note.id
+                          ? 'ring-2 ring-primary-600 bg-primary-600/10'
+                          : 'hover:border-surface-700'
+                      } ${note.isOptimistic ? 'opacity-70' : ''} ${note.isDeleting ? 'opacity-50' : ''}`}
+                      onClick={() => handleNoteSelect(note)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="text-body-large font-medium text-surface-300 truncate flex-1">
+                          {note.title}
+                        </h3>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExportNote(note);
+                            }}
+                            className="btn-icon p-1"
+                            title="Exportar"
+                          >
+                            <Download size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNote(note.id);
+                            }}
+                            className="btn-icon p-1 text-error-400 hover:bg-error-600/20"
+                            title="Deletar"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <p className="text-body-small text-surface-500 line-clamp-3 mb-3">
+                        {note.content.replace(/[#*`]/g, '').substring(0, 150)}...
                       </p>
+                      
                       {note.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 mb-3">
                           {note.tags.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="text-label-small bg-surface-200 dark:bg-surface-700 text-on-surface-variant px-2 py-1 rounded-full"
+                              className="text-label-small bg-surface-800 text-surface-400 px-2 py-1 rounded-full"
                             >
                               #{tag}
                             </span>
                           ))}
                           {note.tags.length > 3 && (
-                            <span className="text-label-small text-on-surface-variant">
+                            <span className="text-label-small text-surface-500">
                               +{note.tags.length - 3}
                             </span>
                           )}
                         </div>
                       )}
+                      
+                      <div className="text-label-small text-surface-600">
+                        {new Date(note.updatedAt).toLocaleDateString('pt-BR')}
+                      </div>
+                      
+                      {note.isOptimistic && (
+                        <div className="absolute top-2 right-2 w-2 h-2 bg-warning-500 rounded-full animate-pulse"></div>
+                      )}
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExportNote(note);
-                        }}
-                        className="btn-icon p-1"
-                        title="Exportar"
-                      >
-                        <Download size={14} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNote(note.id);
-                        }}
-                        className="btn-icon p-1 text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20"
-                        title="Deletar"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                // List view
+                <div className="space-y-2 p-2">
+                  {filteredNotes.map((note) => (
+                    <div
+                      key={note.id}
+                      className={`p-3 rounded-xl cursor-pointer transition-all duration-200 group ${
+                        selectedNote?.id === note.id
+                          ? 'bg-primary-600/20 text-primary-300'
+                          : 'hover:bg-surface-800'
+                      } ${note.isOptimistic ? 'opacity-70' : ''} ${note.isDeleting ? 'opacity-50' : ''}`}
+                      onClick={() => handleNoteSelect(note)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-body-large font-medium truncate mb-1">
+                            {note.title}
+                          </h3>
+                          <p className="text-body-small text-surface-500 line-clamp-2 mb-2">
+                            {note.content.replace(/[#*`]/g, '').substring(0, 100)}...
+                          </p>
+                          {note.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {note.tags.slice(0, 3).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="text-label-small bg-surface-800 text-surface-400 px-2 py-1 rounded-full"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                              {note.tags.length > 3 && (
+                                <span className="text-label-small text-surface-500">
+                                  +{note.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExportNote(note);
+                            }}
+                            className="btn-icon p-1"
+                            title="Exportar"
+                          >
+                            <Download size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNote(note.id);
+                            }}
+                            className="btn-icon p-1 text-error-400 hover:bg-error-600/20"
+                            title="Deletar"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {note.isOptimistic && (
+                        <div className="absolute top-2 right-2 w-2 h-2 bg-warning-500 rounded-full animate-pulse"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -333,12 +486,12 @@ const NotesView: React.FC = () => {
         md:flex-1 w-full md:w-auto
         transition-transform duration-300 ease-in-out
         flex flex-col z-10
-        bg-surface md:bg-transparent
+        surface md:bg-transparent
       `}>
         {selectedNote ? (
           <>
             {/* Header mobile com botão voltar */}
-            <div className="md:hidden p-4 border-b divider bg-surface-container">
+            <div className="md:hidden p-4 border-b border-surface-800 surface-container">
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleBackToList}
@@ -347,7 +500,7 @@ const NotesView: React.FC = () => {
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <h1 className="text-title-large text-on-surface truncate flex-1">
+                <h1 className="text-title-large text-surface-300 truncate flex-1">
                   {selectedNote.title}
                 </h1>
                 <div className="flex gap-2">
@@ -360,7 +513,7 @@ const NotesView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className={`btn-icon ${isEditing ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : ''}`}
+                    className={`btn-icon ${isEditing ? 'bg-primary-600/20 text-primary-400' : ''}`}
                     title={isEditing ? 'Visualizar' : 'Editar'}
                   >
                     <Edit size={18} />
@@ -377,6 +530,11 @@ const NotesView: React.FC = () => {
                   onSave={(updatedNote) => {
                     setSelectedNote(updatedNote);
                     setIsEditing(false);
+                    showToast({
+                      type: 'success',
+                      title: 'Nota salva',
+                      message: 'Alterações salvas com sucesso'
+                    });
                   }}
                 />
               ) : (
@@ -387,11 +545,11 @@ const NotesView: React.FC = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center">
-              <FileText size={64} className="mx-auto mb-4 text-on-surface-variant" />
-              <h2 className="text-headline-small text-on-surface mb-2">
+              <FileText size={64} className="mx-auto mb-4 text-surface-500" />
+              <h2 className="text-headline-small text-surface-300 mb-2">
                 Selecione uma nota
               </h2>
-              <p className="text-body-large text-on-surface-variant mb-6">
+              <p className="text-body-large text-surface-500 mb-6">
                 Escolha uma nota da lista ou crie uma nova
               </p>
               <button onClick={handleCreateNote} className="btn-filled">
@@ -404,6 +562,7 @@ const NotesView: React.FC = () => {
       </div>
 
       {showImporter && <MarkdownImporter onClose={() => setShowImporter(false)} />}
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   );
 };

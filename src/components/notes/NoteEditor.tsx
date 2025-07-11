@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Save, X } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Note } from '../../types';
+import useOptimisticNotes from '../../hooks/useOptimisticNotes';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface NoteEditorProps {
   note: Note;
@@ -9,7 +11,8 @@ interface NoteEditorProps {
 }
 
 const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave }) => {
-  const { updateNote } = useApp();
+  const { user } = useAuth();
+  const { updateNote } = useOptimisticNotes(user?.uid);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,8 +59,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave }) => {
   };
 
   return (
-    <div className="h-full flex flex-col dark:bg-surface-900">
-      <div className="p-4 border-b divider surface-container">
+    <div className="h-full flex flex-col surface">
+      <div className="p-4 border-b border-surface-800 surface-container">
         <div className="flex items-center gap-3">
           <input
             type="text"
@@ -79,44 +82,45 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave }) => {
             ) : (
               <>
                 <Save size={16} />
-                <span className="text-label-large dark:text-white">Salvar</span>
+                <span className="text-label-large">Salvar</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      <div className="dark:bg-surface-800 flex-1 overflow-hidden">
-        <div className="w-full h-full flex-1 p-4 rounded-tl-3xl rounded-tr-3xl dark:bg-surface-900">
+      <div className="surface-container flex-1 overflow-hidden">
+        <div className="w-full h-full flex-1 p-6 rounded-tl-3xl rounded-tr-3xl surface">
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="p-4 rounded-xl w-full h-full resize-none border-none outline-none bg-transparent text-body-large font-mono leading-relaxed"
+            className="w-full h-full resize-none border-none outline-none bg-transparent text-body-large font-mono leading-relaxed text-surface-300 placeholder-surface-500"
             placeholder="# Título da Nota
 
-                        Comece a escrever em **Markdown**...
+Comece a escrever em **Markdown**...
 
-                        ## Exemplos de formatação:
+## Exemplos de formatação:
 
-                        - **Negrito** ou __negrito__
-                        - *Itálico* ou _itálico_
-                        - `código inline`
-                        - [Link](https://exemplo.com)
+- **Negrito** ou __negrito__
+- *Itálico* ou _itálico_
+- `código inline`
+- [Link](https://exemplo.com)
 
-                        ### Lista de tarefas:
-                        - [x] Tarefa concluída
-                        - [ ] Tarefa pendente
+### Lista de tarefas:
+- [x] Tarefa concluída
+- [ ] Tarefa pendente
 
-                        ### Tags:
-                        Use #tag para criar tags automaticamente"
+### Tags:
+Use #tag para criar tags automaticamente"
             spellCheck={false}
           />
         </div>
       </div>
+      
       {hasChanges && (
-        <div className="p-3 bg-amber-50 dark:bg-surface-900 border-t border-amber-200 dark:border-amber-800">
-          <p className="text-body-small text-amber-700 dark:text-amber-400 text-center">
+        <div className="p-3 bg-warning-600/10 border-t border-warning-600/30">
+          <p className="text-body-small text-warning-400 text-center">
             Você tem alterações não salvas. Pressione Ctrl+S para salvar.
           </p>
         </div>
