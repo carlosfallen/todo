@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taskmaster-v1';
+const CACHE_NAME = 'To Do-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',

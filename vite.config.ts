@@ -9,15 +9,15 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: [], // remove splash and extra assets
       manifest: {
-        name: 'Meu App Incrível',
-        short_name: 'AppIncrível',
+        name: 'To Do',
+        short_name: 'To Do',
         start_url: '.',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#7c3aed',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }
         ]
       },
       workbox: {
