@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import useTasks from '../hooks/useTasks';
-import useTaskLists from '../hooks/useTaskLists';
+import useOptimisticTasks from '../hooks/useOptimisticTasks';
+import useOptimisticTaskLists from '../hooks/useOptimisticTaskLists';
 import useOptimisticNotes from '../hooks/useOptimisticNotes';
 import { Task, TaskList, Note, TaskFilter, ViewMode } from '../types';
 
@@ -73,7 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteTask,
     toggleTaskCompletion,
     toggleTaskImportance,
-  } = useTasks(user?.uid);
+  } = useOptimisticTasks(user?.uid);
   
   const {
     lists,
@@ -83,7 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     createList,
     updateList,
     deleteList,
-  } = useTaskLists(user?.uid);
+  } = useOptimisticTaskLists(user?.uid);
 
   const {
     notes,

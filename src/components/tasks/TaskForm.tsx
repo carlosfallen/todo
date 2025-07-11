@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, Star, X, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Star, X, AlertCircle, Clock, Wifi } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import DatePicker from '../ui/DatePicker';
 import TaskSteps from './TaskSteps';
@@ -22,7 +22,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, onTaskSaved = () => {} }) 
   const [isClosing, setIsClosing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   
@@ -65,29 +65,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, onTaskSaved = () => {} }) 
     }, 200);
   };
   
-  const createTaskWithRetry = async (taskData: any, maxRetries = 2): Promise<void> => {
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        await createTask(taskData);
-        return;
-      } catch (error) {
-        console.error(`Task creation attempt ${attempt + 1} failed:`, error);
-        
-        if (attempt === maxRetries) {
-          throw error;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-      }
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim() || isSubmitting) return;
     
     setIsSubmitting(true);
+    setSyncStatus('saving');
     setError(null);
     
     try {
@@ -101,31 +85,28 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, onTaskSaved = () => {} }) 
         steps
       };
 
-      if (retryCount === 0) {
-        setTitle('');
-        setNotes('');
-        setImportant(false);
-        setDueDate(null);
-        setSteps([]);
-        
-        onTaskSaved();
-        
-        setIsClosing(true);
-        setTimeout(() => {
-          onClose();
-        }, 100);
-      }
+      // Clear form immediately for optimistic UI
+      setTitle('');
+      setNotes('');
+      setImportant(false);
+      setDueDate(null);
+      setSteps([]);
       
-      await createTaskWithRetry(taskData);
+      onTaskSaved();
+      
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+      }, 100);
+
+      // Create task (this will be optimistic)
+      await createTask(taskData);
+      setSyncStatus('saved');
       
     } catch (error) {
-      console.error("Failed to create task after retries:", error);
-      
-      if (retryCount === 0) {
-        setError("Falha ao salvar tarefa. Verifique sua conexão.");
-      }
-      
-      setRetryCount(prev => prev + 1);
+      console.error("Failed to create task:", error);
+      setError("Falha ao salvar tarefa. Verifique sua conexão.");
+      setSyncStatus('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -143,6 +124,19 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, onTaskSaved = () => {} }) 
   const handleRemoveDueDate = (e: React.MouseEvent) => {
     e.stopPropagation();
     setDueDate(null);
+  };
+
+  const getSyncStatusIcon = () => {
+    switch (syncStatus) {
+      case 'saving':
+        return <Clock size={16} className="text-warning-500 animate-pulse" />;
+      case 'saved':
+        return <Wifi size={16} className="text-success-500" />;
+      case 'error':
+        return <AlertCircle size={16} className="text-error-500" />;
+      default:
+        return null;
+    }
   };
   
   return (
@@ -162,15 +156,18 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, onTaskSaved = () => {} }) 
         className="card-elevated overflow-hidden focus-within:ring-2 focus-within:ring-primary-500"
       >
         <div className="p-4">
-          <input
-            ref={titleInputRef}
-            type="text"
-            placeholder="Nome da tarefa"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={isSubmitting}
-            className="w-full text-on-surface text-body-large font-medium placeholder-on-surface-variant focus:outline-none bg-transparent disabled:opacity-50"
-          />
+          <div className="flex items-center gap-2 mb-3">
+            <input
+              ref={titleInputRef}
+              type="text"
+              placeholder="Nome da tarefa"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={isSubmitting}
+              className="flex-1 text-on-surface text-body-large font-medium placeholder-on-surface-variant focus:outline-none bg-transparent disabled:opacity-50"
+            />
+            {getSyncStatusIcon()}
+          </div>
           
           <textarea
             placeholder="Adicionar notas"

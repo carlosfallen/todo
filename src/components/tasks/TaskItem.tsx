@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
-import { Star, Calendar, Edit, Trash2, MoreVertical, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Calendar, Edit, Trash2, MoreVertical, Check, ChevronDown, ChevronUp, Wifi, WifiOff, Clock } from 'lucide-react';
 import { Task } from '../../types';
 import { useApp } from '../../contexts/AppContext';
 import TaskEdit from './TaskEdit';
 
 interface TaskItemProps {
-  task: Task;
+  task: Task & {
+    isOptimistic?: boolean;
+    isDeleting?: boolean;
+    syncStatus?: 'pending' | 'syncing' | 'synced' | 'error';
+    error?: string;
+  };
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
@@ -79,6 +84,20 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
     
     return 'text-on-surface-variant';
   };
+
+  const getSyncStatusIcon = () => {
+    switch (task.syncStatus) {
+      case 'pending':
+        return <Clock size={12} className="text-warning-500 animate-pulse" title="Aguardando sincronização" />;
+      case 'syncing':
+        return <div className="w-3 h-3 border border-primary-500 border-t-transparent rounded-full animate-spin" title="Sincronizando..." />;
+      case 'error':
+        return <WifiOff size={12} className="text-error-500" title="Erro de sincronização" />;
+      case 'synced':
+      default:
+        return task.isOptimistic ? <Wifi size={12} className="text-success-500" title="Sincronizado" /> : null;
+    }
+  };
   
   const completedSteps = task.steps.filter(step => step.completed).length;
   const totalSteps = task.steps.length;
@@ -90,20 +109,33 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   
   return (
     <div 
-      className={`card-interactive p-4 mb-3 transition-all duration-200 ${
+      className={`card-interactive p-4 mb-3 transition-all duration-200 relative ${showOptions ? 'z-50' : 'z-0'} ${showOptions ? 'overflow-visible' : 'overflow-hidden'} ${
         task.completed 
           ? 'opacity-60' 
           : ''
-      } ripple animate-fade-in relative ${showOptions ? 'z-50' : 'z-0'} ${showOptions ? 'overflow-visible' : 'overflow-hidden'}`}
+      } ${
+        task.isDeleting 
+          ? 'opacity-50 scale-95' 
+          : ''
+      } ${
+        task.isOptimistic || task.syncStatus === 'pending' || task.syncStatus === 'syncing'
+          ? 'ring-1 ring-primary-500/30 bg-primary-500/5'
+          : ''
+      } ${
+        task.error || task.syncStatus === 'error'
+          ? 'ring-1 ring-error-500/30 bg-error-500/5'
+          : ''
+      } ripple animate-fade-in`}
     >
       <div className="flex items-start gap-4">
         <button
           onClick={handleToggleComplete}
+          disabled={task.isDeleting || task.syncStatus === 'syncing'}
           className={`flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all duration-200 ${
             task.completed
               ? 'bg-primary-600 border-primary-600 dark:bg-primary-500 dark:border-primary-500' 
               : 'border-surface-400 hover:border-primary-600'
-          } flex items-center justify-center mt-0.5 ripple`}
+          } flex items-center justify-center mt-0.5 ripple disabled:opacity-50 disabled:cursor-not-allowed`}
           aria-label={task.completed ? "Marcar como não concluída" : "Marcar como concluída"}
         >
           {task.completed && <Check size={14} className="text-white" />}
@@ -112,15 +144,18 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <h3 
-                className={`text-body-large font-medium transition-all duration-200 ${
-                  task.completed 
-                    ? 'line-through text-on-surface-variant' 
-                    : 'text-on-surface'
-                }`}
-              >
-                {task.title}
-              </h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 
+                  className={`text-body-large font-medium transition-all duration-200 ${
+                    task.completed 
+                      ? 'line-through text-on-surface-variant' 
+                      : 'text-on-surface'
+                  }`}
+                >
+                  {task.title}
+                </h3>
+                {getSyncStatusIcon()}
+              </div>
               
               {hasSteps && (
                 <div className="mt-1 text-body-small text-on-surface-variant">
@@ -137,6 +172,14 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                   {task.notes}
                 </p>
               )}
+
+              {task.error && (
+                <div className="mt-2 p-2 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+                  <p className="text-body-small text-error-600 dark:text-error-400">
+                    {task.error}
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -151,11 +194,12 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               
               <button
                 onClick={handleToggleImportant}
+                disabled={task.isDeleting || task.syncStatus === 'syncing'}
                 className={`btn-icon ${
                   task.important 
                     ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20' 
                     : 'text-on-surface-variant hover:text-amber-500'
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
                 aria-label={task.important ? "Remover importância" : "Marcar como importante"}
               >
                 <Star size={16} fill={task.important ? 'currentColor' : 'none'} />
@@ -164,7 +208,8 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowOptions(!showOptions)}
-                  className="btn-icon"
+                  disabled={task.isDeleting}
+                  className="btn-icon disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Mais opções"
                 >
                   <MoreVertical size={16} />
