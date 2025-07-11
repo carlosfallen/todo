@@ -25,7 +25,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave }) => {
     setIsSaving(true);
     try {
       // Extract tags from content
-      const tagRegex = /#(\w+)/g;
+      const tagRegex = /#(\w+)/g; 
       const tags: string[] = [];
       let match;
       while ((match = tagRegex.exec(content)) !== null) {
@@ -56,7 +56,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave }) => {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col dark:bg-surface-900">
       <div className="p-4 border-b divider surface-container">
         <div className="flex items-center gap-3">
           <input
@@ -79,42 +79,43 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave }) => {
             ) : (
               <>
                 <Save size={16} />
-                <span className="text-label-large">Salvar</span>
+                <span className="text-label-large dark:text-white">Salvar</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      <div className="flex-1 p-4">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full h-full resize-none border-none outline-none bg-transparent text-body-large font-mono leading-relaxed"
-          placeholder="# Título da Nota
+      <div className="dark:bg-surface-800 flex-1 overflow-hidden">
+        <div className="w-full h-full flex-1 p-4 rounded-tl-3xl rounded-tr-3xl dark:bg-surface-900">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="p-4 rounded-xl w-full h-full resize-none border-none outline-none bg-transparent text-body-large font-mono leading-relaxed"
+            placeholder="# Título da Nota
 
-Comece a escrever em **Markdown**...
+                        Comece a escrever em **Markdown**...
 
-## Exemplos de formatação:
+                        ## Exemplos de formatação:
 
-- **Negrito** ou __negrito__
-- *Itálico* ou _itálico_
-- `código inline`
-- [Link](https://exemplo.com)
+                        - **Negrito** ou __negrito__
+                        - *Itálico* ou _itálico_
+                        - `código inline`
+                        - [Link](https://exemplo.com)
 
-### Lista de tarefas:
-- [x] Tarefa concluída
-- [ ] Tarefa pendente
+                        ### Lista de tarefas:
+                        - [x] Tarefa concluída
+                        - [ ] Tarefa pendente
 
-### Tags:
-Use #tag para criar tags automaticamente"
-          spellCheck={false}
-        />
+                        ### Tags:
+                        Use #tag para criar tags automaticamente"
+            spellCheck={false}
+          />
+        </div>
       </div>
-
       {hasChanges && (
-        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-800">
+        <div className="p-3 bg-amber-50 dark:bg-surface-900 border-t border-amber-200 dark:border-amber-800">
           <p className="text-body-small text-amber-700 dark:text-amber-400 text-center">
             Você tem alterações não salvas. Pressione Ctrl+S para salvar.
           </p>

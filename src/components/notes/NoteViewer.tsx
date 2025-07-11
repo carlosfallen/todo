@@ -6,11 +6,12 @@ import { Note } from '../../types';
 interface NoteViewerProps {
   note: Note;
 }
-
+ 
 const NoteViewer: React.FC<NoteViewerProps> = ({ note }) => {
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className='pts-4 dark:bg-surface-800'>
+      <div className="max-w-4xl mx-auto p-6 rounded-3xl dark:bg-surface-900">
         <div className="prose prose-lg dark:prose-invert max-w-none">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -195,6 +196,7 @@ const NoteViewer: React.FC<NoteViewerProps> = ({ note }) => {
             </p>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

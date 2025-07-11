@@ -280,7 +280,7 @@ const Sidebar: React.FC = () => {
                 {lists.map(list => (
                   <div key={list.id} className="relative group">
                     {showDeleteConfirm === list.id ? (
-                      <div className="card p-4 border border-error-200 dark:border-error-800 animate-scale-in">
+                      <div className="card p-4 border-t divider border-error-200 dark:border-error-800 animate-scale-in">
                         <p className="text-body-medium text-error-700 dark:text-error-400 mb-3">
                           Deletar esta lista?
                         </p>

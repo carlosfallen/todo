@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { Plus, Search, FileText, Edit, Trash2, Download, Upload, X } from 'lucide-react';
+import { Plus, Search, FileText, Edit, Trash2, Download, Upload, X, ArrowLeft } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import NoteEditor from './NoteEditor';
 import NoteViewer from './NoteViewer';
 import { Note } from '../../types';
-
+ 
 const NotesView: React.FC = () => {
   const { notes, createNote, deleteNote, importNoteFromMarkdown, notesLoading } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
+  const [showNotesList, setShowNotesList] = useState(true);
 
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -26,6 +27,23 @@ const NotesView: React.FC = () => {
     });
     setSelectedNote(newNote);
     setIsEditing(true);
+    if (window.innerWidth < 768) {
+      setShowNotesList(false);
+    }
+  };
+
+  const handleNoteSelect = (note: Note) => {
+    setSelectedNote(note);
+    setIsEditing(false);
+    if (window.innerWidth < 768) {
+      setShowNotesList(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowNotesList(true);
+    setSelectedNote(null);
+    setIsEditing(false);
   };
 
   const handleDeleteNote = async (noteId: string) => {
@@ -34,6 +52,9 @@ const NotesView: React.FC = () => {
       if (selectedNote?.id === noteId) {
         setSelectedNote(null);
         setIsEditing(false);
+        if (window.innerWidth < 768) {
+          setShowNotesList(true);
+        }
       }
     }
   };
@@ -76,6 +97,9 @@ const NotesView: React.FC = () => {
         const newNote = await importNoteFromMarkdown(importContent, importTitle);
         setSelectedNote(newNote);
         setIsEditing(false);
+        if (window.innerWidth < 768) {
+          setShowNotesList(false);
+        }
         onClose();
       } catch (error) {
         console.error('Erro ao importar:', error);
@@ -170,9 +194,17 @@ const NotesView: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <div className="w-80 border-r divider surface-container flex flex-col">
+    <div className="flex h-full relative bg-surface">
+      {/* Sidebar de notas - Responsivo */}
+      <div className={`
+        ${showNotesList ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:static
+        fixed md:relative inset-y-0 left-0 z-30
+        w-full md:w-80 
+        transition-transform duration-300 ease-in-out
+        border-r divider surface-container flex flex-col
+        md:rounded-3xl
+      `}>
         <div className="p-4 border-b divider">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-title-large text-on-surface">Notas</h2>
@@ -227,10 +259,7 @@ const NotesView: React.FC = () => {
                       ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                       : 'hover:bg-surface-100 dark:hover:bg-surface-800'
                   }`}
-                  onClick={() => {
-                    setSelectedNote(note);
-                    setIsEditing(false);
-                  }}
+                  onClick={() => handleNoteSelect(note)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -288,33 +317,60 @@ const NotesView: React.FC = () => {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      {/* Overlay para mobile - só quando a lista está visível */}
+      {showNotesList && selectedNote && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-20" 
+          onClick={handleBackToList}
+        />
+      )}
+
+      {/* Conteúdo principal - Responsivo */}
+      <div className={`
+        ${!showNotesList ? 'translate-x-0' : 'translate-x-full'}
+        md:translate-x-0
+        fixed md:relative inset-0 md:inset-auto
+        md:flex-1 w-full md:w-auto
+        transition-transform duration-300 ease-in-out
+        flex flex-col z-10
+        bg-surface md:bg-transparent
+      `}>
         {selectedNote ? (
           <>
-            <div className="p-4 border-b divider surface-container flex items-center justify-between">
-              <h1 className="text-title-large text-on-surface truncate">
-                {selectedNote.title}
-              </h1>
-              <div className="flex gap-2">
+            {/* Header mobile com botão voltar */}
+            <div className="md:hidden p-4 border-b divider bg-surface-container">
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => handleExportNote(selectedNote)}
+                  onClick={handleBackToList}
                   className="btn-icon"
-                  title="Exportar"
+                  title="Voltar para lista"
                 >
-                  <Download size={18} />
+                  <ArrowLeft size={20} />
                 </button>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className={`btn-icon ${isEditing ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : ''}`}
-                  title={isEditing ? 'Visualizar' : 'Editar'}
-                >
-                  <Edit size={18} />
-                </button>
+                <h1 className="text-title-large text-on-surface truncate flex-1">
+                  {selectedNote.title}
+                </h1>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleExportNote(selectedNote)}
+                    className="btn-icon"
+                    title="Exportar"
+                  >
+                    <Download size={18} />
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className={`btn-icon ${isEditing ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : ''}`}
+                    title={isEditing ? 'Visualizar' : 'Editar'}
+                  >
+                    <Edit size={18} />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            {/* Conteúdo da nota */}
+            <div className="flex-1 overflow-auto">
               {isEditing ? (
                 <NoteEditor
                   note={selectedNote}
@@ -329,7 +385,7 @@ const NotesView: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center">
               <FileText size={64} className="mx-auto mb-4 text-on-surface-variant" />
               <h2 className="text-headline-small text-on-surface mb-2">

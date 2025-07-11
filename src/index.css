@@ -139,7 +139,7 @@
 
   /* Navigation Components */
   .nav-rail {
-    @apply bg-surface-50 dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800;
+    @apply bg-surface-50 dark:bg-surface-900;
   }
   
   .nav-item {

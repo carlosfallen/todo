@@ -22,13 +22,26 @@ const MainApp: React.FC = () => {
     }
   };
 
+const renderHeader = () => {
+  switch (viewMode) {
+    case 'tasks':
+      return <Header />;
+    case 'notes':
+      return null; // NotesView já tem seu próprio header integrado
+    case 'settings':
+      return null;
+    default:
+      return <Header />;
+  }
+};
+
   return (
     <div className="min-h-screen surface text-on-surface">
-      <div className="flex min-h-screen">
+      <div className="flex flex-col md:flex-row min-h-screen">
         <Sidebar />
         
         <div className="flex-1 min-w-0 flex flex-col">
-          {viewMode === 'tasks' && <Header />}
+          {renderHeader()}
           <main className={`flex-1 ${viewMode === 'notes' ? '' : 'overflow-hidden'}`}>
             {renderMainContent()}
           </main>
