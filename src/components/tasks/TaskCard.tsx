@@ -4,19 +4,17 @@ import {
   CheckCircle, 
   Circle, 
   Star,
-  StarOff,
   Edit3, 
   Trash2,
   ChevronDown,
   ChevronRight,
   Calendar,
-  Clock,
   ListTodo,
   AlertCircle
 } from 'lucide-react';
 import { Task, TaskList } from '../../types';
-import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 import { updateTask, deleteTask } from '../../services/firebase/firestore';
+import { AnimatePresence } from 'framer-motion';
 
 interface TaskCardProps {
   task: Task;
@@ -26,12 +24,7 @@ interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, taskList, onEdit }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showActions, setShowActions] = useState(false);
-
-  const swipeGesture = useSwipeGesture({
-    onSwipeLeft: () => setShowActions(true),
-    onSwipeRight: () => setShowActions(false)
-  });
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleToggleComplete = async () => {
     try {
@@ -54,10 +47,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, taskList, onEdit }) =>
   };
 
   const handleDelete = async () => {
-    try {
-      await deleteTask(task.id);
-    } catch (error) {
-      console.error('Error deleting task:', error);
+    if (window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
+      try {
+        await deleteTask(task.id);
+      } catch (error) {
+        console.error('Error deleting task:', error);
+      }
     }
   };
 
@@ -100,230 +95,199 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, taskList, onEdit }) =>
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ 
-        scale: 1.01,
-        boxShadow: task.completed 
-          ? "0 4px 15px rgba(34, 197, 94, 0.1)" 
-          : "0 4px 15px rgba(0, 0, 0, 0.1)"
-      }}
-      transition={{ duration: 0.2 }}
+      whileHover={{ y: -4 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
       className={`
-        relative rounded-lg shadow-sm border overflow-hidden group transition-all duration-200
+        relative rounded-3xl border-2 overflow-hidden transition-all duration-300
         ${task.completed 
-          ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700' 
-          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 border-green-200 dark:border-green-800' 
+          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
         }
-        ${isOverdue() ? 'ring-1 ring-red-200 dark:ring-red-800' : ''}
+        ${isOverdue() ? 'ring-2 ring-red-400 dark:ring-red-600' : ''}
+        shadow-sm hover:shadow-xl
       `}
-      {...swipeGesture}
     >
-      {/* Swipe Actions */}
-      {showActions && (
-        <motion.div
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-end px-4 z-10"
-        >
-          <button
-            onClick={handleDelete}
-            className="text-white p-3 rounded-full hover:bg-white/20 transition-colors"
-          >
-            <Trash2 size={20} />
-          </button>
-        </motion.div>
+      {/* Priority Indicator Bar */}
+      {task.important && !task.completed && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400"></div>
       )}
 
-      {/* Priority/Status Indicators */}
-      <div className="absolute top-2 left-2 flex items-center space-x-1">
-        {task.important && (
-          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-        )}
-        {isOverdue() && (
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-        )}
-        {isDueToday() && !task.completed && (
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-        )}
-      </div>
-
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-start space-x-2 flex-1 min-w-0">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleToggleComplete}
-              className={`mt-0.5 transition-colors ${
-                task.completed 
-                  ? 'text-green-600 hover:text-green-700' 
-                  : 'text-gray-400 hover:text-green-500'
-              }`}
-            >
-              {task.completed ? <CheckCircle size={20} /> : <Circle size={20} />}
-            </motion.button>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
-                <h3 className={`
-                  text-sm font-medium truncate flex-1
-                  ${task.completed 
-                    ? 'line-through text-gray-500 dark:text-gray-400' 
-                    : 'text-gray-900 dark:text-white'
-                  }
-                `}>
-                  {task.title}
-                </h3>
-                {isOverdue() && (
-                  <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
-                )}
-              </div>
-              
-              {task.notes && (
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                  {task.notes.length > 60 ? `${task.notes.substring(0, 60)}...` : task.notes}
-                </p>
-              )}
-
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex items-center space-x-1.5">
-                  <motion.span 
-                    whileHover={{ scale: 1.05 }}
-                    className="px-2 py-0.5 text-xs rounded-full text-white"
-                    style={{ backgroundColor: taskList.color }}
-                  >
-                    {taskList.name}
-                  </motion.span>
-                  
-                  {task.steps.length > 0 && (
-                    <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400">
-                      <ListTodo size={10} />
-                      <span>{getCompletedStepsCount()}/{task.steps.length}</span>
-                    </div>
-                  )}
-                </div>
-
-                {task.dueDate && (
-                  <div className={`flex items-center text-xs ${
-                    isOverdue() 
-                      ? 'text-red-600 dark:text-red-400' 
-                      : isDueToday() 
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {isOverdue() || isDueToday() ? <Clock size={10} className="mr-1" /> : <Calendar size={10} className="mr-1" />}
-                    <span className="text-xs">
-                      {isOverdue() ? 'Atrasada' : isDueToday() ? 'Hoje' : new Date(task.dueDate).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Progress Bar */}
-              {task.steps.length > 0 && !task.completed && (
-                <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    <span>Progresso</span>
-                    <span>{getProgressPercentage()}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${getProgressPercentage()}%` }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-1 rounded-full"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1.5 ml-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleToggleImportant}
-              className={`transition-colors ${
-                task.important 
-                  ? 'text-yellow-500 hover:text-yellow-600' 
-                  : 'text-gray-400 hover:text-yellow-500'
-              }`}
-            >
-              {task.important ? <Star size={16} fill="currentColor" /> : <StarOff size={16} />}
-            </motion.button>
-            
-            {task.steps.length > 0 && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </motion.button>
-            )}
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onEdit(task)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-            >
-              <Edit3 size={14} />
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Steps */}
-        {isExpanded && task.steps.length > 0 && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="mt-3 pl-6 space-y-2 border-l-2 border-gray-100 dark:border-gray-700"
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          {/* Checkbox */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleToggleComplete}
+            className="flex-shrink-0 mt-0.5"
           >
-            {task.steps.sort((a, b) => a.orderIndex - b.orderIndex).map((step, index) => (
-              <motion.div 
-                key={step.id} 
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center space-x-2 group/step"
-              >
+            {task.completed ? (
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+                <CheckCircle size={20} className="text-white" />
+              </div>
+            ) : (
+              <Circle size={24} className="text-gray-400 hover:text-purple-500 transition-colors" />
+            )}
+          </motion.button>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h3 className={`
+                text-base font-semibold transition-all
+                ${task.completed 
+                  ? 'line-through text-gray-500 dark:text-gray-400' 
+                  : 'text-gray-900 dark:text-white'
+                }
+              `}>
+                {task.title}
+              </h3>
+
+              {/* Actions */}
+              <div className={`flex items-center gap-1 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleStepToggle(step.id)}
-                  className={`transition-colors ${
-                    step.completed 
-                      ? 'text-green-600 hover:text-green-700' 
-                      : 'text-gray-400 hover:text-green-500'
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleToggleImportant}
+                  className={`p-1.5 rounded-xl transition-all ${
+                    task.important 
+                      ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' 
+                      : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
                   }`}
                 >
-                  {step.completed ? <CheckCircle size={16} /> : <Circle size={16} />}
+                  <Star size={16} fill={task.important ? 'currentColor' : 'none'} />
                 </motion.button>
-                <span className={`
-                  text-xs flex-1 transition-colors
-                  ${step.completed 
-                    ? 'line-through text-gray-500 dark:text-gray-400' 
-                    : 'text-gray-700 dark:text-gray-300 group-hover/step:text-gray-900 dark:group-hover/step:text-white'
-                  }
-                `}>
-                  {step.title}
-                </span>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => onEdit(task)}
+                  className="p-1.5 rounded-xl text-gray-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all"
+                >
+                  <Edit3 size={16} />
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleDelete}
+                  className="p-1.5 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                >
+                  <Trash2 size={16} />
+                </motion.button>
+              </div>
+            </div>
 
-      {/* Bottom gradient for visual depth */}
-      <div className={`absolute bottom-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-        task.completed 
-          ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-600'
-          : 'bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600'
-      }`}></div>
+            {/* Notes */}
+            {task.notes && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+                {task.notes.length > 100 ? `${task.notes.substring(0, 100)}...` : task.notes}
+              </p>
+            )}
+
+            {/* Meta Info */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span 
+                className="px-3 py-1 text-xs font-medium rounded-full text-white shadow-sm"
+                style={{ backgroundColor: taskList.color }}
+              >
+                {taskList.name}
+              </span>
+              
+              {task.steps.length > 0 && (
+                <span className="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                  <ListTodo size={12} />
+                  {getCompletedStepsCount()}/{task.steps.length}
+                </span>
+              )}
+
+              {task.dueDate && (
+                <span className={`flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
+                  isOverdue() 
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+                    : isDueToday() 
+                      ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}>
+                  {isOverdue() ? <AlertCircle size={12} /> : <Calendar size={12} />}
+                  {isOverdue() ? 'Atrasada' : isDueToday() ? 'Hoje' : new Date(task.dueDate).toLocaleDateString('pt-BR')}
+                </span>
+              )}
+            </div>
+
+            {/* Progress Bar */}
+            {task.steps.length > 0 && !task.completed && (
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <span className="font-medium">Progresso</span>
+                  <span className="font-bold">{getProgressPercentage()}%</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${getProgressPercentage()}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-purple-500 via-cyan-500 to-purple-500 rounded-full"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Steps */}
+            {task.steps.length > 0 && (
+              <>
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-2"
+                >
+                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <span className="font-medium">Etapas</span>
+                </button>
+
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700 ml-2"
+                    >
+                      {task.steps.sort((a, b) => a.orderIndex - b.orderIndex).map((step) => (
+                        <motion.div 
+                          key={step.id}
+                          initial={{ x: -10, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          className="flex items-center gap-2"
+                        >
+                          <button
+                            onClick={() => handleStepToggle(step.id)}
+                            className="flex-shrink-0"
+                          >
+                            {step.completed ? (
+                              <CheckCircle size={16} className="text-green-500" />
+                            ) : (
+                              <Circle size={16} className="text-gray-400 hover:text-purple-500 transition-colors" />
+                            )}
+                          </button>
+                          <span className={`text-sm ${
+                            step.completed 
+                              ? 'line-through text-gray-500 dark:text-gray-400' 
+                              : 'text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {step.title}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 };

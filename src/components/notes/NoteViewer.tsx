@@ -5,6 +5,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Edit3, 
@@ -23,13 +24,18 @@ interface NoteViewerProps {
 
 export const NoteViewer: React.FC<NoteViewerProps> = ({ note, onClose, onEdit }) => {
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col">
-      {/* Header */}
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col"
+    >
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-3">
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
           >
             <ArrowLeft size={24} />
           </button>
@@ -48,7 +54,6 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ note, onClose, onEdit })
         </Button>
       </div>
 
-      {/* Note Metadata */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center space-x-1">
@@ -62,7 +67,6 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ note, onClose, onEdit })
           </div>
         </div>
 
-        {/* Tags */}
         {note.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {note.tags.map(tag => (
@@ -78,23 +82,23 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ note, onClose, onEdit })
         )}
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           {note.content ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-white prose-code:text-blue-600 dark:prose-code:text-blue-400 prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  code({ node, inline, className, children, ...props }) {
+                  code({ className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '');
-                    return !inline && match ? (
+                    const isInline = !match;
+                    
+                    return !isInline && match ? (
                       <SyntaxHighlighter
-                        style={tomorrow}
+                        style={tomorrow as any}
                         language={match[1]}
                         PreTag="div"
                         className="rounded-lg"
-                        {...props}
                       >
                         {String(children).replace(/\n$/, '')}
                       </SyntaxHighlighter>
@@ -185,6 +189,6 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ note, onClose, onEdit })
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

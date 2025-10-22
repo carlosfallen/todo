@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -7,8 +7,8 @@ import { RegisterForm } from './components/auth/RegisterForm';
 import { TaskList } from './components/tasks/TaskList';
 import { NoteList } from './components/notes/NoteList';
 import { ProfilePage } from './components/profile/ProfilePage';
-import { TopBar } from './components/layout/TopBar';
-import { BottomNavigation } from './components/layout/BottomNavigation';
+import { Sidebar } from './components/layout/Sidebar';
+import { Header } from './components/layout/Header';
 import { createTaskList } from './services/firebase/firestore';
 
 function App() {
@@ -16,18 +16,17 @@ function App() {
   const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
   const [activeTab, setActiveTab] = useLocalStorage<'tasks' | 'notes' | 'profile'>('activeTab', 'tasks');
   const [isLogin, setIsLogin] = useState(true);
-  const [defaultListsCreated, setDefaultListsCreated] = useState(false);
+  const [defaultListsCreated, setDefaultListsCreated] = useLocalStorage('defaultListsCreated', false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Create default task lists for new users
   useEffect(() => {
     if (user && !defaultListsCreated) {
       const createDefaultLists = async () => {
         try {
           const defaultLists = [
-            { name: 'Pessoal', color: '#3B82F6' },
-            { name: 'Trabalho', color: '#EF4444' },
-            { name: 'Estudos', color: '#10B981' },
-            { name: 'Casa', color: '#F59E0B' }
+            { name: 'Pessoal', color: '#8B5CF6' },
+            { name: 'Trabalho', color: '#06B6D4' },
+            { name: 'Estudos', color: '#F59E0B' }
           ];
 
           for (const list of defaultLists) {
@@ -45,9 +44,8 @@ function App() {
 
       createDefaultLists();
     }
-  }, [user, defaultListsCreated]);
+  }, [user, defaultListsCreated, setDefaultListsCreated]);
 
-  // Apply dark mode
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -58,10 +56,10 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Carregando...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mx-auto mb-6"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Carregando...</p>
         </div>
       </div>
     );
@@ -69,7 +67,7 @@ function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
         {isLogin ? (
           <LoginForm onToggleForm={() => setIsLogin(false)} />
         ) : (
@@ -94,20 +92,28 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <TopBar
-          darkMode={darkMode}
-          onToggleDarkMode={() => setDarkMode(!darkMode)}
-        />
-        
-        <main className="pt-16 pb-20">
-          {renderContent()}
-        </main>
-
-        <BottomNavigation
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <Sidebar
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
         />
+        
+        <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'}`}>
+          <Header
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+            sidebarOpen={sidebarOpen}
+          />
+          
+          <main className="pt-20 p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
       </div>
     </Router>
   );

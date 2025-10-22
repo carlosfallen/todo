@@ -32,6 +32,7 @@ export interface Task {
   notes: string;
   completed: boolean;
   important: boolean;
+  dueDate: number;
   listId: string;
   userId: string;
   createdAt: Date;
