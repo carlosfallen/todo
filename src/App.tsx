@@ -2,31 +2,36 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useSwipeGesture } from './hooks/useSwipeGesture';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { TaskList } from './components/tasks/TaskList';
 import { NoteList } from './components/notes/NoteList';
 import { ProfilePage } from './components/profile/ProfilePage';
-import { Sidebar } from './components/layout/Sidebar';
-import { Header } from './components/layout/Header';
+import { HomeScreen } from './components/home/HomeScreen';
+import { TopBar } from './components/layout/TopBar';
+import { BottomNavigation } from './components/layout/BottomNavigation';
 import { createTaskList } from './services/firebase/firestore';
+import { subscribeToTasks, subscribeToNotes } from './services/firebase/firestore';
+import { Task, Note } from './types';
 
 function App() {
   const { user, loading } = useAuth();
   const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
-  const [activeTab, setActiveTab] = useLocalStorage<'tasks' | 'notes' | 'profile'>('activeTab', 'tasks');
+  const [activeTab, setActiveTab] = useLocalStorage<'home' | 'tasks' | 'notes' | 'profile'>('activeTab', 'home');
   const [isLogin, setIsLogin] = useState(true);
   const [defaultListsCreated, setDefaultListsCreated] = useLocalStorage('defaultListsCreated', false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
 
   useEffect(() => {
     if (user && !defaultListsCreated) {
       const createDefaultLists = async () => {
         try {
           const defaultLists = [
-            { name: 'Pessoal', color: '#8B5CF6' },
-            { name: 'Trabalho', color: '#06B6D4' },
-            { name: 'Estudos', color: '#F59E0B' }
+            { name: 'Pessoal', color: '#007AFF' },
+            { name: 'Trabalho', color: '#34C759' },
+            { name: 'Estudos', color: '#FF9500' }
           ];
 
           for (const list of defaultLists) {
@@ -47,6 +52,18 @@ function App() {
   }, [user, defaultListsCreated, setDefaultListsCreated]);
 
   useEffect(() => {
+    if (user) {
+      const unsubscribeTasks = subscribeToTasks(user.uid, setTasks);
+      const unsubscribeNotes = subscribeToNotes(user.uid, setNotes);
+
+      return () => {
+        unsubscribeTasks();
+        unsubscribeNotes();
+      };
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -54,12 +71,28 @@ function App() {
     }
   }, [darkMode]);
 
+  const tabs: Array<'home' | 'tasks' | 'notes' | 'profile'> = ['home', 'tasks', 'notes', 'profile'];
+  const currentIndex = tabs.indexOf(activeTab);
+
+  useSwipeGesture({
+    onSwipeLeft: () => {
+      if (currentIndex < tabs.length - 1) {
+        setActiveTab(tabs[currentIndex + 1]);
+      }
+    },
+    onSwipeRight: () => {
+      if (currentIndex > 0) {
+        setActiveTab(tabs[currentIndex - 1]);
+      }
+    },
+  });
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-ios-light-bg dark:bg-ios-dark-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mx-auto mb-6"></div>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Carregando...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-ios-light-accent dark:border-ios-dark-accent border-t-transparent mx-auto mb-6"></div>
+          <p className="text-ios-base text-ios-light-secondary dark:text-ios-dark-secondary">Carregando...</p>
         </div>
       </div>
     );
@@ -67,7 +100,7 @@ function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-ios-light-bg dark:bg-ios-dark-bg flex items-center justify-center p-4">
         {isLogin ? (
           <LoginForm onToggleForm={() => setIsLogin(false)} />
         ) : (
@@ -79,6 +112,15 @@ function App() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'home':
+        return (
+          <HomeScreen
+            userId={user.uid}
+            tasks={tasks}
+            notes={notes}
+            onNavigate={setActiveTab}
+          />
+        );
       case 'tasks':
         return <TaskList userId={user.uid} />;
       case 'notes':
@@ -86,34 +128,51 @@ function App() {
       case 'profile':
         return <ProfilePage user={user} />;
       default:
-        return <TaskList userId={user.uid} />;
+        return (
+          <HomeScreen
+            userId={user.uid}
+            tasks={tasks}
+            notes={notes}
+            onNavigate={setActiveTab}
+          />
+        );
+    }
+  };
+
+  const getTitle = () => {
+    switch (activeTab) {
+      case 'home':
+        return 'Produtividade';
+      case 'tasks':
+        return 'Tarefas';
+      case 'notes':
+        return 'Notas';
+      case 'profile':
+        return 'Perfil';
+      default:
+        return 'Produtividade';
     }
   };
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
+      <div className="min-h-screen bg-ios-light-bg dark:bg-ios-dark-bg">
+        <TopBar
+          darkMode={darkMode}
+          onToggleDarkMode={() => setDarkMode(!darkMode)}
+          title={getTitle()}
         />
-        
-        <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'}`}>
-          <Header
-            darkMode={darkMode}
-            onToggleDarkMode={() => setDarkMode(!darkMode)}
-            onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-            sidebarOpen={sidebarOpen}
-          />
-          
-          <main className="pt-20 p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-              {renderContent()}
-            </div>
-          </main>
-        </div>
+
+        <main className="pt-20 px-4 pb-safe-bottom">
+          <div className="max-w-2xl mx-auto">
+            {renderContent()}
+          </div>
+        </main>
+
+        <BottomNavigation
+          activeTab={activeTab === 'home' ? 'tasks' : activeTab}
+          onTabChange={(tab) => setActiveTab(tab)}
+        />
       </div>
     </Router>
   );

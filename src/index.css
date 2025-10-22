@@ -1,3 +1,78 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply font-ios bg-ios-light-bg dark:bg-ios-dark-bg text-ios-light-text dark:text-ios-dark-text;
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y;
+  }
+
+  :root {
+    color-scheme: light dark;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .ios-card {
+    @apply bg-ios-light-card dark:bg-ios-dark-card border border-ios-light-border dark:border-ios-dark-border rounded-ios-xl shadow-ios;
+  }
+
+  .ios-button {
+    @apply px-6 py-3 rounded-ios-lg font-semibold text-ios-base transition-all duration-200 active:scale-95 shadow-ios-sm;
+  }
+
+  .ios-button-primary {
+    @apply ios-button bg-ios-light-accent dark:bg-ios-dark-accent text-white hover:opacity-90;
+  }
+
+  .ios-input {
+    @apply w-full px-4 py-3 rounded-ios bg-ios-light-card dark:bg-ios-dark-elevated border border-ios-light-border dark:border-ios-dark-border text-ios-base focus:outline-none focus:ring-2 focus:ring-ios-light-accent dark:focus:ring-ios-dark-accent transition-all;
+  }
+
+  .ios-glass {
+    @apply bg-white/80 dark:bg-black/80 backdrop-blur-ios;
+  }
+
+  .ios-divider {
+    @apply border-t border-ios-light-border dark:border-ios-dark-border;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .safe-area-top {
+    padding-top: calc(1rem + env(safe-area-inset-top));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}

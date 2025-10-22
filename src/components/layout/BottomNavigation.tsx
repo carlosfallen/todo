@@ -18,25 +18,38 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   ] as const;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2 safe-area-inset-bottom">
-      <div className="flex items-center justify-around">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <motion.button
-            key={id}
-            onClick={() => onTabChange(id)}
-            className={`
-              flex flex-col items-center space-y-1 py-2 px-3 rounded-lg transition-colors
-              ${activeTab === id
-                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
-            `}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Icon size={20} />
-            <span className="text-xs font-medium">{label}</span>
-          </motion.button>
-        ))}
+    <div className="fixed bottom-0 left-0 right-0 ios-glass border-t border-ios-light-border dark:border-ios-dark-border safe-area-bottom z-50">
+      <div className="flex items-center justify-around px-2 py-1">
+        {tabs.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
+          return (
+            <motion.button
+              key={id}
+              onClick={() => onTabChange(id)}
+              className={`
+                relative flex flex-col items-center justify-center py-2 px-6 rounded-ios-lg transition-all duration-200
+                ${isActive ? 'text-ios-light-accent dark:text-ios-dark-accent' : 'text-ios-light-secondary dark:text-ios-dark-secondary'}
+              `}
+              whileTap={{ scale: 0.9 }}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-ios-light-accent/10 dark:bg-ios-dark-accent/10 rounded-ios-lg"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <Icon
+                size={28}
+                strokeWidth={isActive ? 2.5 : 2}
+                className="relative z-10 mb-1"
+              />
+              <span className={`relative z-10 text-ios-xs ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                {label}
+              </span>
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );
