@@ -1,0 +1,39 @@
+firestore-productivity-app/
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── components/
+│   │   ├── Auth.tsx
+│   │   ├── Editor.tsx
+│   │   ├── Filters.tsx
+│   │   ├── Header.tsx
+│   │   ├── NotesList.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── TaskItem.tsx
+│   │   └── TasksList.tsx
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   ├── useNotes.ts
+│   │   ├── useOffline.ts
+│   │   └── useTasks.ts
+│   ├── lib/
+│   │   ├── firebase.ts
+│   │   ├── storage.ts
+│   │   └── sync.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── utils/
+│   │   ├── export.ts
+│   │   └── import.ts
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+├── .env.example
+├── .gitignore
+├── index.html
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts

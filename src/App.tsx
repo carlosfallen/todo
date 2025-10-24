@@ -1,180 +1,179 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { useState } from 'react';
+import { Header } from './components/Header';
+import { SearchBar } from './components/SearchBar';
+import { Filters } from './components/Filters';
+import { NotesList } from './components/NotesList';
+import { TasksList } from './components/TasksList';
+import { Editor } from './components/Editor';
+import { useNotes } from './hooks/useNotes';
+import { useTasks } from './hooks/useTasks';
 import { useAuth } from './hooks/useAuth';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { useSwipeGesture } from './hooks/useSwipeGesture';
-import { LoginForm } from './components/auth/LoginForm';
-import { RegisterForm } from './components/auth/RegisterForm';
-import { TaskList } from './components/tasks/TaskList';
-import { NoteList } from './components/notes/NoteList';
-import { ProfilePage } from './components/profile/ProfilePage';
-import { HomeScreen } from './components/home/HomeScreen';
-import { TopBar } from './components/layout/TopBar';
-import { BottomNavigation } from './components/layout/BottomNavigation';
-import { createTaskList } from './services/firebase/firestore';
-import { subscribeToTasks, subscribeToNotes } from './services/firebase/firestore';
-import { Task, Note } from './types';
+import { FilterState, Note, Task } from './types';
+import { exportProject } from './utils/export';
+import { importProject } from './utils/import';
+import { Plus, StickyNote, CheckSquare } from 'lucide-react';
 
 function App() {
+  const { notes, addNote, updateNote, deleteNote } = useNotes();
+  const { tasks, addTask, updateTask, deleteTask, reorderTasks } = useTasks();
   const { user, loading } = useAuth();
-  const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
-  const [activeTab, setActiveTab] = useLocalStorage<'home' | 'tasks' | 'notes' | 'profile'>('activeTab', 'home');
-  const [isLogin, setIsLogin] = useState(true);
-  const [defaultListsCreated, setDefaultListsCreated] = useLocalStorage('defaultListsCreated', false);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [notes, setNotes] = useState<Note[]>([]);
-
-  useEffect(() => {
-    if (user && !defaultListsCreated) {
-      const createDefaultLists = async () => {
-        try {
-          const defaultLists = [
-            { name: 'Pessoal', color: '#007AFF' },
-            { name: 'Trabalho', color: '#34C759' },
-            { name: 'Estudos', color: '#FF9500' }
-          ];
-
-          for (const list of defaultLists) {
-            await createTaskList({
-              ...list,
-              userId: user.uid
-            });
-          }
-
-          setDefaultListsCreated(true);
-        } catch (error) {
-          console.error('Error creating default task lists:', error);
-        }
-      };
-
-      createDefaultLists();
-    }
-  }, [user, defaultListsCreated, setDefaultListsCreated]);
-
-  useEffect(() => {
-    if (user) {
-      const unsubscribeTasks = subscribeToTasks(user.uid, setTasks);
-      const unsubscribeNotes = subscribeToNotes(user.uid, setNotes);
-
-      return () => {
-        unsubscribeTasks();
-        unsubscribeNotes();
-      };
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const tabs: Array<'home' | 'tasks' | 'notes' | 'profile'> = ['home', 'tasks', 'notes', 'profile'];
-  const currentIndex = tabs.indexOf(activeTab);
-
-  useSwipeGesture({
-    onSwipeLeft: () => {
-      if (currentIndex < tabs.length - 1) {
-        setActiveTab(tabs[currentIndex + 1]);
-      }
-    },
-    onSwipeRight: () => {
-      if (currentIndex > 0) {
-        setActiveTab(tabs[currentIndex - 1]);
-      }
-    },
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<FilterState>({
+    tags: [],
+    status: 'all',
+    priority: 'all',
   });
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [activeTab, setActiveTab] = useState<'notes' | 'tasks'>('tasks');
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-ios-light-bg dark:bg-ios-dark-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-ios-light-accent dark:border-ios-dark-accent border-t-transparent mx-auto mb-6"></div>
-          <p className="text-ios-base text-ios-light-secondary dark:text-ios-dark-secondary">Carregando...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-ios-light-bg dark:bg-ios-dark-bg flex items-center justify-center p-4">
-        {isLogin ? (
-          <LoginForm onToggleForm={() => setIsLogin(false)} />
-        ) : (
-          <RegisterForm onToggleForm={() => setIsLogin(true)} />
-        )}
-      </div>
-    );
-  }
+  const allTags = [...new Set([...notes.flatMap(n => n.tags)])];
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'home':
-        return (
-          <HomeScreen
-            userId={user.uid}
-            tasks={tasks}
-            notes={notes}
-            onNavigate={setActiveTab}
-          />
-        );
-      case 'tasks':
-        return <TaskList userId={user.uid} />;
-      case 'notes':
-        return <NoteList userId={user.uid} />;
-      case 'profile':
-        return <ProfilePage user={user} />;
-      default:
-        return (
-          <HomeScreen
-            userId={user.uid}
-            tasks={tasks}
-            notes={notes}
-            onNavigate={setActiveTab}
-          />
-        );
+  const handleExport = () => {
+    exportProject(notes, tasks);
+  };
+
+  const handleImport = async (file: File) => {
+    try {
+      const { notes: importedNotes, tasks: importedTasks } = await importProject(file);
+      for (const note of importedNotes) {
+        await addNote(note);
+      }
+      for (const task of importedTasks) {
+        await addTask(task);
+      }
+      alert('Project imported successfully!');
+    } catch (error) {
+      alert('Failed to import project. Please check the file format.');
     }
   };
 
-  const getTitle = () => {
-    switch (activeTab) {
-      case 'home':
-        return 'Produtividade';
-      case 'tasks':
-        return 'Tarefas';
-      case 'notes':
-        return 'Notas';
-      case 'profile':
-        return 'Perfil';
-      default:
-        return 'Produtividade';
+  const handleAddNote = async () => {
+    const newNote = await addNote({
+      title: 'New Note',
+      content: '',
+      tags: [],
+    });
+    if (newNote) {
+      setSelectedNote(newNote);
     }
+  };
+
+  const handleAddTask = async () => {
+    await addTask({
+      title: 'New Task',
+      completed: false,
+      important: false,
+      listId: '',
+      notes: '',
+      steps: [],
+      taskId: '',
+      orderIndex: tasks.length,
+    });
+  };
+
+  const handleReorder = async (reorderedTasks: Task[]) => {
+    const allTasksMap = new Map(tasks.map(t => [t.id, t]));
+    reorderedTasks.forEach((task, index) => {
+      allTasksMap.set(task.id, { ...task, orderIndex: index });
+    });
+    await reorderTasks(Array.from(allTasksMap.values()));
   };
 
   return (
-    <Router>
-      <div className="min-h-screen bg-ios-light-bg dark:bg-ios-dark-bg">
-        <TopBar
-          darkMode={darkMode}
-          onToggleDarkMode={() => setDarkMode(!darkMode)}
-          title={getTitle()}
-        />
+    <div className="min-h-screen bg-gray-50">
+      <Header onExport={handleExport} onImport={handleImport} />
 
-        <main className="pt-20 px-4 pb-safe-bottom">
-          <div className="max-w-2xl mx-auto">
-            {renderContent()}
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <button
+                  onClick={() => setActiveTab('tasks')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
+                    activeTab === 'tasks'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <CheckSquare size={20} />
+                  Tasks ({tasks.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('notes')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
+                    activeTab === 'notes'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <StickyNote size={20} />
+                  Notes ({notes.length})
+                </button>
+              </div>
+
+              {activeTab === 'tasks' ? (
+                <button
+                  onClick={handleAddTask}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  <Plus size={20} />
+                  Add Task
+                </button>
+              ) : (
+                <button
+                  onClick={handleAddNote}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  <Plus size={20} />
+                  Add Note
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {activeTab === 'tasks' ? (
+                <TasksList
+                  tasks={tasks}
+                  onUpdate={updateTask}
+                  onDelete={deleteTask}
+                  onReorder={handleReorder}
+                  filters={filters}
+                  searchQuery={searchQuery}
+                />
+              ) : (
+                <NotesList
+                  notes={notes}
+                  onSelect={setSelectedNote}
+                  onDelete={deleteNote}
+                  searchQuery={searchQuery}
+                />
+              )}
+            </div>
           </div>
-        </main>
-
-        <BottomNavigation
-          activeTab={activeTab === 'home' ? 'tasks' : activeTab}
-          onTabChange={(tab) => setActiveTab(tab)}
-        />
+        </div>
       </div>
-    </Router>
+
+      {selectedNote && (
+        <Editor
+          note={selectedNote}
+          onClose={() => setSelectedNote(null)}
+          onSave={(updates) => updateNote(selectedNote.id, updates)}
+        />
+      )}
+    </div>
   );
 }
 

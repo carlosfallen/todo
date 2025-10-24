@@ -1,61 +1,38 @@
-export interface User {
-  id: string;
-  email: string;
-  displayName: string;
-  photoURL?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface TaskList {
-  id: string;
-  name: string;
-  color: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Step {
-  id: string;
-  title: string;
-  completed: boolean;
-  orderIndex: number;
-  taskId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Task {
-  id: string;
-  title: string;
-  notes: string;
-  completed: boolean;
-  important: boolean;
-  dueDate: number;
-  listId: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  steps: Step[];
-}
-
 export interface Note {
   id: string;
   title: string;
   content: string;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
   userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  linkedNotes: string[];
 }
 
-export interface AppState {
-  user: User | null;
-  tasks: Task[];
-  taskLists: TaskList[];
-  notes: Note[];
-  darkMode: boolean;
-  activeTab: 'tasks' | 'notes' | 'profile';
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: string;
+  orderIndex: number;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  important: boolean;
+  listId: string;
+  notes: string;
+  steps: Subtask[];
+  createdAt: string;
+  updatedAt: string;
+  taskId: string;
+  orderIndex: number;
+  userId: string;
+}
+
+export interface FilterState {
+  tags: string[];
+  status: 'all' | 'completed' | 'pending';
+  priority: 'all' | 'important' | 'normal';
 }
